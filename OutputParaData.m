@@ -3,7 +3,7 @@ set(0,'defaultAxesFontSize',14)
 set(0,'defaultLineLineWidth',1)
 
 %% Load data
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2.mat')
+load('data_final2.mat')
 
 %% Set parameters for calculating incidence
 % Set start year and start month

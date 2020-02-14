@@ -5,7 +5,7 @@ function [gen,dist,time,chain]=ReconstructTrnsmssnTreeCnsnss(rslts,infctn,infctr
 db='';
 load(rslts)
 % load(db)
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2.mat')
+load('data_final2.mat')
 
 % Select data for para
 data=data(ismember(data.PARA,para),:);

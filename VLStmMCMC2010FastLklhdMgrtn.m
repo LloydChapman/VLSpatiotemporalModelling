@@ -2,7 +2,7 @@ function VLStmMCMC2010FastLklhdMgrtn(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,
  
 if nargin==0
     %%
-    load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2.mat') % database
+    load('data_final2.mat') % database
     r1=3; %2; % r parameter of NegBin(r1,p1) distribution for incubation period
     mu=5; % mean incubation period in months
     p10=r1/(mu-1+r1);
@@ -15,7 +15,7 @@ if nargin==0
     alpha0=100; %50; % distance scale factor for spatial kernel;
     epsilon0=1e-3; %1e-4; %1e-2; % background transmission rate
     delta0=1e-3; %0; % additional within-HH transmission rate
-    s1=load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2004data/SpatiotemporalModelling/data_final.mat');
+    s1=load('data_final.mat');
     [pars,~]=FitCatModLST3(s1.data,p2);
     lambda0=pars/12;
     h0=0.03; %1/40; % relative infectiousness of pre-symptomatics
@@ -440,7 +440,7 @@ lambdaI=lambdaHHI(ib,:); % expand to individual-level infectious pressure
 % SusA=setdiff((1:n)',union(IPNIA,find(actvK|prevK|IpreEXTIM|EXTIMsoonI|IpreINTIM|PpreINTIM|PpreEXTIM|KothrObs|PothrObs)));
 SusA=setdiff((1:n)',union(union(IPNIA,PA),find(actvK|prevK|IpreEXTIM|EXTIMsoonI|IpreINTIM|PpreINTIM|PpreEXTIM|KothrObs|PothrObs)));
 nSusA=numel(SusA);
-% s1=load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2004data/SpatiotemporalModelling/data_final.mat');
+% s1=load('data_final.mat');
 % [pars,~]=FitCatModLST3(s1.data,p2);
 % % age=max((1-tB)/12,0); % Should this be max(-tB/12,0)?
 age=max(-tB,0); 
@@ -916,7 +916,7 @@ S(IM_IN(ismember(IM_OUT,Asx)),:)=0; % remove susceptibility from 2nd observation
 
 % Susceptibility vector
 % Variation in susceptibility according to age
-% s=load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2004data/SpatiotemporalModelling/data_final.mat');
+% s=load('data_final.mat');
 % [pars2,~]=FitCatModLST2(s.data);
 % age=max((1-tB)/12,0);
 % sigma=1-pars2(2)*(1-exp(-pars2(1)*age));

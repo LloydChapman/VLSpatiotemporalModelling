@@ -7,7 +7,7 @@ db='';
 load(rslts)
 clear M
 % load(db)
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2.mat')
+load('data_final2.mat')
 
 data=data(ismember(data.PARA,para),:);
 % s=load(rslts);

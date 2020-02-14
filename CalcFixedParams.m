@@ -1,7 +1,7 @@
 clear
 
 %% Load data
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2')
+load('data_final2.mat')
 
 % Number of individuals
 n=size(data,1);

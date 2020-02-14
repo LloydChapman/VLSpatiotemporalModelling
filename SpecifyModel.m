@@ -2,7 +2,7 @@
 
 %% DATA
 % Load data
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2.mat'); % loads table called 'data'
+load('data_final2.mat'); % loads table called 'data'
 
 % Set which paras are included in data
 para=1:19;
@@ -35,7 +35,7 @@ epsilon0=1e-3;
 delta0=1e-2;
 pI0=0.15;
 % Estimate lambda0 by fitting initial status model to LST data from 2002
-s1=load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2004data/SpatiotemporalModelling/data_final.mat');
+s1=load('data_final');
 [pars,~]=FitCatModLST3(s1.data,p2);
 lambda0=pars/12;
 

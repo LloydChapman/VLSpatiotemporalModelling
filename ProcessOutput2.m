@@ -20,7 +20,7 @@ end
 
 % Load data
 % load(db)
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2')
+load('data_final2')
  
 % Select data for para
 data=data(ismember(data.PARA,para),:);

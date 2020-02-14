@@ -5,7 +5,6 @@ db='';
 rng=[];
 
 load(rslts)
-% load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final')
 
 % Remove first row (initial values) of p if it's not already been removed
 % so that same index can be used for p and missing data
@@ -21,7 +20,7 @@ end
 
 % Load data
 % load(db)
-load('~/Dropbox/Visceral Leishmaniasis/CarynBernData/2010data/data_final2')
+load('data_final2.mat')
 % Select data for para
 data=data(ismember(data.PARA,para),:);
 % Rename longitude and latitude variables
