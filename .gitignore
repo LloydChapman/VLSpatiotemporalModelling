@@ -1,0 +1,9 @@
+*.mat
+*.jld
+*.jld2
+*.fig
+*.eps
+*.pdf
+*.png
+*.avi
+*.mp4
