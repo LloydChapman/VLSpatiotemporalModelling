@@ -1,10 +1,14 @@
 # Inferring transmission trees to quantify spatiotemporal spread of visceral leishmaniasis
 
-This repository contains MCMC code and simulation code for estimating the parameters of, and simulating, the individual-level spatial kernel visceral leishmaniasis transmission model described in 'Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post-kala-azar dermal leishmaniasis'.
+This repository contains MCMC code and simulation code for estimating the parameters of, and simulating, the individual-level spatial kernel visceral leishmaniasis transmission model described in ['Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post-kala-azar dermal leishmaniasis'](https://doi.org/10.1101/2020.02.24.20023325) [1].
 
 ## Prerequisites
 
-* MATLAB R2017b+, available from <https://uk.mathworks.com/downloads/>, requires a users licence. Installation and activation instructions: <https://uk.mathworks.com>.
+* MATLAB R2017b+, available from <https://uk.mathworks.com/downloads/>, requires a users licence. Installation and activation instructions: <https://www.mathworks.com/help/install/index.html>.
+
+* The following MATLAB toolboxes are required to run the MCMC code:
+  * Optimization Toolbox v8.0+
+  * Statistics and Machine Learning Toolbox v11.2+
 
 * Julia v1.0.5+, available from <https://julialang.org/downloads/>. Installation instructions: <https://julialang.org/downloads/platform/>.
 
@@ -24,7 +28,7 @@ This repository contains MCMC code and simulation code for estimating the parame
 
 ## Data
 
-The MCMC code requires data (data_final2.mat) which cannot be made publicly available as it contains personally identifiable information. If you would like to obtain a copy of the data please contact <lloyd.chapman@lshtm.ac.uk> in the first instance. Simulated data and code for testing the MCMC  algorithm on it will be added to this repository in due course. All data necessary to run the Julia simulation code is contained within this repository.
+The MCMC code requires data (files 'data_final.mat' and 'data_final2.mat') which cannot be made publicly available as they contain personally identifiable information. If you would like to obtain a copy of the data please contact <lloyd.chapman@lshtm.ac.uk> in the first instance. Simulated data and code for testing the MCMC  algorithm on it will be added to this repository in due course. All data necessary to run the Julia simulation code is contained within this repository.
 
 ## Installing
 
@@ -32,7 +36,7 @@ Clone/download this project into a folder on your machine using the green button
 
 ### MCMC code
 
-Once MATLAB has been installed and you have data in the required format, the MCMC code can be run by opening MATLAB, changing the directory to the folder in which the files are saved, setting the parameters for the model(s) you would like to test in the SpecifyModel.m script, and then running each model by entering
+Once MATLAB has been installed and you have data in the required format, the MCMC code can be run by opening MATLAB, changing the working directory to the folder in which the files are saved, setting the parameters for the model(s) you would like to test in the SpecifyModel.m script, and then running each model by entering
 
 ```matlab
 >> RunMCMC(i)
@@ -73,12 +77,12 @@ julia> include("PlotSims.jl")
 
 ## Built With
 
-* MCMC code: [MATLAB R2017b (9.3.0.713579)](https://uk.mathworks.com/downloads/)
+* MCMC code: [MATLAB 9.3.0.713579 (R2017b)](https://uk.mathworks.com/downloads/)
 * Simulation code: [Julia 1.0.5](https://julialang.org/downloads/)
 
 ## Authors
 
-* [**Lloyd Chapman**](lloyd.chapman@lshtm.ac.uk)
+* **Lloyd Chapman:** <lloyd.chapman@lshtm.ac.uk>
 
 ## License
 
@@ -86,8 +90,11 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ## Acknowledgments
 
-* The techniques used to accelerate the adaptation and convergence of the MCMC algorithm are due to Simon Spencer. Further details can be found in the  supporting information for the paper and have been submitted for publication in a separate paper [1].
+* The techniques used to accelerate the adaptation and convergence of the MCMC algorithm are due to Simon Spencer. Further details can be found in the  supporting information for the paper and have been submitted for publication in a separate paper [2].
 * The code for plotting the shaded arrows in the transmission trees uses the MATLAB functions "quiver_thick.m" and "arrow_thick.m" from [Open Earth Tools](https://svn.oss.deltares.nl/repos/openearthtools/trunk/matlab/general/plot_fun/).
 
 ## References
-1. SEF Spencer. Accelerating adaptation in the adaptive Metropolis Hastings random walk algorithm. (Submitted), 1–19 (2020).
+1. Chapman LAC, Spencer SEF, Pollington TM, Jewell CP, Mondal D, Alvar J, Hollingsworth TD, Cameron MM, Bern C, Medley GF. Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post-kala-azar dermal leishmaniasis. medRxiv 2020; doi: [10.1101/2020.02.24.20023325](https://doi.org/10.1101/2020.02.24.20023325)
+ 
+
+2. SEF Spencer. Accelerating adaptation in the adaptive Metropolis Hastings random walk algorithm. (Submitted), 1–19 (2020).

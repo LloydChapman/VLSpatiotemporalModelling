@@ -12,4 +12,4 @@ SpecifyModel
 maxNumCompThreads(2);
 
 %% Run MCMC
-VLStmMCMC2010FastLklhdMgrtn(data,r1,p10,a,b,p2,u{i},beta0s(i),alpha0s(i),epsilon0,delta0s(i),lambda0s(i),h0s(i),h1s(i),h2s(i),h3s(i),hmssngs(i),h40s(i),pI0s(i),typ{i},inclLST(i),niters,plotOutpt,rslts{i},para)
+VLStmMCMC2010FastLklhdMgrtn(data,r1,p10,a,b,p2,u{i},beta0s(i),alpha0s(i),epsilon0,delta0s(i),lambda0s(i),h0s(i),h1s(i),h2s(i),h3s(i),hmssngs(i),h40s(i),pI0s(i),typ{i},niters,plotOutpt,rslts{i},para)

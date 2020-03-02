@@ -109,6 +109,7 @@ h(1).Color=[0.8 0.255 0.145];
 h(2).Color=[81 130 187]/255;
 set(gca,'FontSize',24)
 xlabel('Time'); ylabel('Incidence (cases/10,000/yr)'); legend('VL','PKDL')
+xlim([startyr endyr+1])
 saveas(gcf,'MonthlyKAandPKDLinc')
 saveas(gcf,'MonthlyKAandPKDLinc.eps','epsc')
 

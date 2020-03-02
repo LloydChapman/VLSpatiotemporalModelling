@@ -17,7 +17,7 @@ para=1:19;
 % 6: h4 - relative infectiousness of asymptomatics
 % 7: pI - proportion of infections that lead to VL
 
-% Set parameters for negative binomial incubation period distribution
+% Set parameters for negative binomial NB(r1,p1) incubation period distribution
 r1=3; % shape parameter
 mu=5; % guess for mean incubation period
 p10=r1/(mu-1+r1); % initial guess for 'success' parameter
@@ -42,11 +42,11 @@ lambda0=pars/12;
 % Relative infectiousnesses of different forms of PKDL
 h1=9/26/(10/15); % macular/papular
 h3=18/21/(10/15); % nodular
-h2=(h1+h3)/2; % plaque (assumed)
-hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of PKDL cases for cases who weren't physically examined
+h2=(h1+h3)/2; % plaque (assumed halfway between macular/papular and nodular)
+hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases for cases who weren't physically examined
 
 %% MCMC parameters
-niters=1e5; % number of iterations
+niters=10; %1e5; % number of iterations
 plotOutpt=false; % flag for whether to plot output in real-time
 runName='_AllParas';
  
@@ -79,4 +79,3 @@ h3s=h3*ones(1,nMdls);
 h40s=[0.01,0.01,0,0,0.02,0.02]; % relative infectiousness of asymptomatic individuals
 pI0s=pI0*ones(1,nMdls);
 hmssngs=hmssng*ones(1,nMdls);
-inclLST=false(1,nMdls);
