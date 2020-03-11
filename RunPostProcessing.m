@@ -9,18 +9,17 @@ str='DIC'; % string to prepend to rslts when saving DIC
 ss='mode'; % summary statistic to use in calculation of DIC
 % str='DIC_mean'; % string to prepend to rslts when saving DIC
 % ss='mean'; % summary statistic to use in calculation of DIC
-sprtParas=''; % string to determine whether model was fitted assuming no transmission between paras ('SprtParas') or not (any other string)
 np=7; % number of parameters that can be estimated
 
 %% Calculate DIC
 RunCalcDIC(rslts,burnin,ss,str)
 
 %% Output results and find best-fitting model (with lowest DIC)
-DICminMdl=RunCalcParEstsAndDICdiffs2(rslts,np,burnin,IPD,str,false,true,sprtParas,runName);
+DICminMdl=RunCalcParEstsAndDICdiffs2(rslts,np,burnin,IPD,str,true,false,true,runName);
 
 %% Plot deviance distributions
 ord=[3,1,5,4,2,6];
-RunPlotDevDistn(rslts(ord),burnin,IPD,sprtParas,h0s(ord),h40s(ord),delta0s(ord))
+RunPlotDevDistn(rslts(ord),burnin,IPD,h0s(ord),h40s(ord),delta0s(ord))
 
 %% Calculate transmission probabilities for best-fitting model
 thin=1;
@@ -31,7 +30,6 @@ nsmpls=min(1000,niters-burnin);
 [Mcntrbtn,HPDIcntrbtn,iters]=CalcCntrbtnMgrtnAsx(rslts{DICminMdl},nsmpls,burnin);
 
 %% Calculate reproduction numbers and infection distances and intervals for best-fitting model
-% [infctn,infctr,src,infctrmax,srcmax,RjA_I,RjI_I,RjP_I,Rj_I,Rts_I,Rt_I,diA_I,diI_I,diP_I,tiA_I,tiI_I,tiP_I,infctnA,infctrA,srcA,infctrmaxA,srcmaxA,RjA_A,RjI_A,RjP_A,Rj_A,Rts_A,Rt_A,diA_A,diI_A,diP_A,tiA_A,tiI_A,tiP_A,iters,OT,Rj,Rts,Rt,di,ti]=CalcInfctrMgrtnAsx(rslts{6},nsmpls,burnin,iters);
 [infctn,infctr,src,dists,times,SI,onsetinfctr,rcvryinfctr,meandists,meantimes,infctrmax,srcmax,distsmax,timesmax,SImax,onsetinfctrmax,rcvryinfctrmax,meandistsmax,meantimesmax,RjA_I,RjI_I,RjP_I,Rj_I,Rts_I,Rt_I,diA_I,diI_I,diP_I,di_I,tiA_I,tiI_I,tiP_I,ti_I,infctnA,infctrA,srcA,distsA,timesA,SIA,onsetinfctrA,rcvryinfctrA,infctrmaxA,srcmaxA,distsmaxA,timesmaxA,SImaxA,onsetinfctrmaxA,rcvryinfctrmaxA,RjA_A,RjI_A,RjP_A,Rj_A,Rts_A,Rt_A,diA_A,diI_A,diP_A,di_A,tiA_A,tiI_A,tiP_A,ti_A,iters,OT,Rj,Rts,Rt]=CalcInfctrMgrtnAsx(rslts{DICminMdl},nsmpls,burnin,iters);
 
 %% Plot consensus transmission tree for part of the study area in the SE cluster for the best-fitting model

@@ -1,5 +1,5 @@
-function DICminMdl=RunCalcParEstsAndDICdiffs2(rslts,np,burnin,IPD,str,doPlots,savePlots,sprtParas,runName)
-% set(0,'DefaultFigureVisible','off')
+function DICminMdl=RunCalcParEstsAndDICdiffs2(rslts,np,burnin,IPD,str,plotMltpl,doPlots,savePlots,runName)
+% set(0,'DefaultFigureVisible','off') % uncomment to stop figures being plotted to screen
 nMdls=numel(rslts);
 
 %% Calculate parameter estimates and CIs for different models
@@ -26,13 +26,12 @@ HPDI_IP=NaN(nMdls,2);
 MdlParEsts=NaN(nMdls,3*(np+1));
 for i=1:nMdls
     fprintf([rslts{i} '\n'])
-    [mode_p(i,:),HPDI(:,:,i),mode_p1(i),HPDI1(i,:),pcorr{i},pIPtAcorr{i},mode_sptl(i),HPDI_sptl(i,:),mode_bckgrnd(i),HPDI_bckgrnd(i,:),mode_d_half(i),HPDI_d_half(i,:),mode_d_half_out(i),HPDI_d_half_out(i,:),mode_WHHRI(i),HPDI_WHHRI(i,:),mean_IP(i),mode_IP(i),HPDI_IP(i,:)]=ProcessOutput2(rslts{i},burnin,thin,doPlots,savePlots,sprtParas);
+    [mode_p(i,:),HPDI(:,:,i),mode_p1(i),HPDI1(i,:),pcorr{i},pIPtAcorr{i},mode_sptl(i),HPDI_sptl(i,:),mode_bckgrnd(i),HPDI_bckgrnd(i,:),mode_d_half(i),HPDI_d_half(i,:),mode_d_half_out(i),HPDI_d_half_out(i,:),mode_WHHRI(i),HPDI_WHHRI(i,:),mean_IP(i),mode_IP(i),HPDI_IP(i,:)]=ProcessOutput2(rslts{i},burnin,thin,plotMltpl,doPlots,savePlots);
     tmp=[];
     for j=1:np
         tmp=[tmp,mode_p(i,j),HPDI(j,:,i)];
     end
     MdlParEsts(i,:)=[tmp,mode_p1(i),HPDI1(i,:)];
-%     save(['MdlParEstsFinal' rslts{i}(6:end)])
 end
 
 save(['MdlParEstsFinal' IPD runName])
@@ -47,9 +46,7 @@ DICminMdl=find(DICs==DICmin);
 
 %% Output parameter estimates and DICs to file
 MdlParEstsAndDICs=[MdlParEsts,DICs,DICdiffs];
-save(['MdlParEstsAndDICs' IPD sprtParas],'MdlParEstsAndDICs')
-% ord=[1:3,5,4,6];
-% PrintModesAndCIsToFile(MdlParEstsAndDICs([ord,end-1,end],[1:end-5,end-1]),['MdlParEstsAndDICs' IPD sprtParas '.txt'])
+save(['MdlParEstsAndDICs' IPD runName],'MdlParEstsAndDICs')
 
 %% Output acceptance rates
 acc_rate=NaN(nMdls,11);

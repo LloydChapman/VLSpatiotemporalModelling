@@ -46,7 +46,7 @@ h2=(h1+h3)/2; % plaque (assumed halfway between macular/papular and nodular)
 hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases for cases who weren't physically examined
 
 %% MCMC parameters
-niters=10; %1e5; % number of iterations
+niters=1e5; % number of iterations
 plotOutpt=false; % flag for whether to plot output in real-time
 runName='_AllParas';
  

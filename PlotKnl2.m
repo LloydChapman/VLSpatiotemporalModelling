@@ -39,7 +39,7 @@ if any(idx) % any samples have all values within estimated 95% marginal HPDIs
     end
     hold off
 else % no samples have all values within estimated 95% marginal HPDIs
-    fprintf('Too few iterations to estimate HPDI - returning NaN for all outputs.\n')
+    fprintf('Too few iterations to estimate HPDI - returning NaN for transmission kernel estimate.\n')
     mode_Ke=NaN(1,numel(dd));
     mode_K0=NaN;
     mode_rate=NaN(1,numel(dd));

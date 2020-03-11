@@ -1,7 +1,5 @@
-function [mode_p,HPDI,mode_p1,HPDI1,pcorr,pIPtAcorr,mode_sptl,HPDI_sptl,mode_bckgrnd,HPDI_bckgrnd,mode_d_half,HPDI_d_half,mode_d_half_out,HPDI_d_half_out,mode_WHHRI,HPDI_WHHRI,mean_IP,mode_IP,HPDI_IP]=ProcessOutput2(str,burnin1,thin,doPlots,savePlots,sprtParas)
+function [mode_p,HPDI,mode_p1,HPDI1,pcorr,pIPtAcorr,mode_sptl,HPDI_sptl,mode_bckgrnd,HPDI_bckgrnd,mode_d_half,HPDI_d_half,mode_d_half_out,HPDI_d_half_out,mode_WHHRI,HPDI_WHHRI,mean_IP,mode_IP,HPDI_IP]=ProcessOutput2(str,burnin1,thin,plotMltpl,doPlots,savePlots)
 % close all
-
-% db='';
 
 % Load MCMC output
 load(str)
@@ -11,23 +9,18 @@ rslts=rslts(6:end); % remove "MCMC_" from rslts string
 if nargin==1
     z=burnin+1:niters; % if no burnin supplied, use saved default (round(niters/10))
     thin=1;
+    plotMltpl=true;
     doPlots=false;
     savePlots=false;
-    sprtParas='';
 else
     z=burnin1+1:niters; % if new burnin supplied, use it
 end
 
 % Load data
-% load(db)
-load('data_final2')
+load('data_final2.mat')
  
 % Select data for para
 data=data(ismember(data.PARA,para),:);
- 
-% % Restrict dataset to one observation per individual
-% [~,ic,~]=unique(data.ORIG_ID);
-% data=data(ic,:);
  
 % Rename longitude and latitude variables
 data.Properties.VariableNames{'HHNEWLNG'}='longitude';
@@ -37,20 +30,25 @@ data.Properties.VariableNames{'HHNEWLAT'}='latitude';
 nbins=50;
 scrnsz=get(0,'ScreenSize');
 zthin=z(1:thin:end);
+% Plot output with fixed parameters excluded
 figure;
-% Uncomment line below to plot output with fixed parameters excluded and 1
-% realisation of missing onset times
-% [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(zthin,LL,p,nu,pname,prior_mean,p1,a,b,n,tmax,I,RpreD,DpreR,tI,tR,tD,tRLm,tRLRm,nbins,scrnsz);
-% Plot output with multiple realisations of missing onset times
-[mode_pu,HPDIu,mode_p1u,HPDI1u]=PlotOutput2(zthin,LL,p,nu,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLO,tRLsRLNO,tRLRsRLO,tRLRsRLNO,niters,nbins,scrnsz);
+if plotMltpl % multiple realisations of missing KA onset, treatment, relapse and relapse treatment times
+    [mode_pu,HPDIu,mode_p1u,HPDI1u]=PlotOutput2(zthin,LL,p,nu,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLNO,tRLRsRLO,tRLRsRLNO,nbins,scrnsz);
+else % 1 realisation of missing times
+    [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(zthin,LL,p,nu,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,RL,tI,tR,tD,tRL,tRLR,nbins,scrnsz);
+end
 saveas2(gcf,['PSTR_DISTNS_' rslts],savePlots)
 saveas2(gcf,['PSTR_DISTNS_' rslts '.eps'],savePlots,'epsc')
 figure;
 PlotTrace(zthin,p,nu,pname,p1,mode_pu,HPDIu,mode_p1u,HPDI1u,scrnsz)
 
+% Plot output with fixed parameters included
 figure;
-% [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(zthin,LL,p,np,pname,prior_mean,p1,a,b,n,tmax,I,RpreD,DpreR,tI,tR,tD,tRLm,tRLRm,nbins,scrnsz);
-[mode_p,HPDI,mode_p1,HPDI1]=PlotOutput2(zthin,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLO,tRLsRLNO,tRLRsRLO,tRLRsRLNO,niters,nbins,scrnsz);
+if plotMltpl % multiple realisations of missing times
+    [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput2(zthin,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLNO,tRLRsRLO,tRLRsRLNO,nbins,scrnsz);
+else % 1 realisation of missing times
+    [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(zthin,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,RL,tI,tR,tD,tRL,tRLR,nbins,scrnsz);
+end
 figure;
 PlotTrace(zthin,p,np,pname,p1,mode_p,HPDI,mode_p1,HPDI1,scrnsz)
 
@@ -120,18 +118,15 @@ saveas2(gcf,['pIPtACrrltn' rslts '.eps'],savePlots,'epsc')
 
 %% ESTIMATED TRANSMISSION KERNEL
 % Plot estimated transmission kernel
-if strcmp(sprtParas,'SprtParas')
-    [mode_Ke,mode_K0,mode_rate,HPDI_rate]=PlotKnlSprtParas(zthin,p,K0,mode_p,HPDI,d,typ,n,i1,i2,i3,j1,j2,j3);
+dHH=CalcHHDists(data);
+if strcmp(typ,'Cauchy')
+    dHHsqrd=dHH.^2;
 else
-    dHH=CalcHHDists(data);
-    if strcmp(typ,'Cauchy')
-        dHHsqrd=dHH.^2;
-    else
-        dHHsqrd=[];
-    end
-    [mode_Ke,mode_K0,mode_rate,HPDI_rate]=PlotKnl2(zthin,p,K0,mode_p,HPDI,dHH,dHHsqrd,typ,n,nHH,f);
-%     [mode_Ke,mode_K0,mode_rate,HPDI_rate]=PlotKnl3(zthin,p,K0,mode_p,HPDI,dHH,dHHsqrd,typ,n,nHH,f);
+    dHHsqrd=[];
 end
+[mode_Ke,mode_K0,mode_rate,HPDI_rate]=PlotKnl2(zthin,p,K0,mode_p,HPDI,dHH,dHHsqrd,typ,n,nHH,f);
+
+% Save plot
 if ~all(isnan(mode_Ke))
     saveas2(gcf,['SPTL_KRNL_' rslts],savePlots)
     saveas2(gcf,['SPTL_KRNL_' rslts '.eps'],savePlots,'epsc')
@@ -180,7 +175,7 @@ if doPlots
     for j=1:niters
         tEc(ismember(I,pick(:,j)),j)=tEs(ismember(I,pick(:,j)),j);
     end
-    % Cases with both onset and treatment times
+    %% Cases with both onset and treatment times
     OR1=OR(tI(OR)>maxIP);
     for i=1:nplot
         j=find(I==OR1(i));
@@ -188,13 +183,11 @@ if doPlots
         figure;
         mode_tE(j)=PlotInfctnTimePstrDistn(tEc(j,z),tI(OR1(i)),r1,p10,j);
 %         mode_tE(j)=PlotInfctnTimePstrDistn(tEc(j,z),tI(I(j)),r1,p10,j);
-%         saveas2(gcf,['E' num2str(j) rslts],savePlots)
-%         saveas2(gcf,['E' num2str(j) rslts '.eps'],savePlots,'epsc')
-        saveas2(gcf,['E' num2str(j)],savePlots)
-        saveas2(gcf,['E' num2str(j) '.eps'],savePlots,'epsc')
+        saveas2(gcf,['E' num2str(j) rslts],savePlots)
+        saveas2(gcf,['E' num2str(j) rslts '.eps'],savePlots,'epsc')
     end
-    %%
-    % Cases without onset or treatment times
+
+    %% Cases without onset or treatment times
     for i=1:nplot
         j=find(I==NONR(i));
         figure;
@@ -209,7 +202,8 @@ if doPlots
         saveas2(gcf,['EIR' num2str(j) rslts],savePlots)
         saveaspdf(gcf,['EIR' num2str(j) rslts])
     end
-    % Cases without onset times
+    
+    %% Cases without onset times
     for i=1:nRNO
         j=find(I==RNO(i));
         figure;
@@ -223,9 +217,8 @@ if doPlots
         saveas2(gcf,['EI' num2str(j) rslts],savePlots)
         saveaspdf(gcf,['EI' num2str(j) rslts])
     end
-    %%
+    %% Cases without treatment times
     mode_tR_ONR=zeros(nONR,1);
-    % Cases without treatment times
     for i=1:nONR
         j=find(I==ONR(i));
         figure; 
@@ -238,12 +231,11 @@ if doPlots
         xlim([min(hE.BinEdges) max(hR.BinEdges)])
         h3=legend([hE hR],['$$E_{' num2str(j) '}$$'],['$$R_{' num2str(j) '}$$']);
         set(h3,'Interpreter','latex')
-%         saveas2(gcf,['ER' num2str(j) rslts],savePlots)
-%         saveaspdf(gcf,['ER' num2str(j) rslts])
-        saveas2(gcf,['ER' num2str(j)],savePlots)
-        saveaspdf(gcf,['ER' num2str(j)])
+        saveas2(gcf,['ER' num2str(j) rslts],savePlots)
+        saveaspdf(gcf,['ER' num2str(j) rslts])
     end
 end
+
 %% INCUBATION PERIODS
 % Mean IP based on IP distn parameter
 mean_IP=mean(r1*(1-p1(zthin))./p1(zthin))+1;

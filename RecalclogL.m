@@ -1,4 +1,4 @@
-function LL=RecalclogL(n,tmax,tE,I2,I1,tA,tRA,IM_IN,IM_OUT,preB,preIM,tPm,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h,nI,I,tIM,tI,h0,tEM,tRorD,nA,nPI,A,nIMI,IMI,nRL,RL,IPNIA,tRL,tRLR,tD,h4,INTMIG_OUT,rng,nPA,PA,tP,tRP,hv,dHH,dHHsqrd,alpha,beta,typ,nHH,ib,f,u,delta,d0,epsilon,pI,IP,r1,p1,age,S0,lambda0,p2,S0PA,actvAPA,prevAPA)
+function LL=RecalclogL(n,tmax,tE,I2,I1,tA,tRA,IM_IN,IM_OUT,preB,preIM,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h,nI,I,tIM,tI,h0,tEM,tRorD,nA,nPI,A,nIMI,IMI,nRL,RL,IPNIA,tRL,tRLR,tD,h4,INTMIG_OUT,rng,nPA,PA,tP,tRP,hv,dHH,dHHsqrd,alpha,beta,typ,nHH,ib,f,u,delta,d0,epsilon,pI,IP,r1,p1,age,S0,lambda0,p2,S0PA,actvAPA,prevAPA)
     
 tEm=false(n,tmax);
 tEm((tE(I2)-1)*n+uint32(I1))=1;
@@ -10,7 +10,7 @@ prevA=uint32(find(tA==0 & tRA==0));
 actvA=uint32(find(tA==0 & tRA>0));
 IM_INprevAactvA=IM_IN(ismember(IM_OUT,[prevA;actvA]));
 
-S=1-max(preB,preIM)-max(max(max(max(cumsum(tEm,2),cumsum(tAm,2)),cumsum(tPm,2)),cumsum(tDm,2)),cumsum(tEMm,2)); % don't remove LST+ individuals
+S=1-max(preB,preIM)-max(max(max(cumsum(tEm,2),cumsum(tAm,2)),cumsum(tDm,2)),cumsum(tEMm,2)); % don't remove LST+ individuals
 S(prevK,:)=0; % remove previous KA cases from susceptibles
 S(prevA,:)=0; % remove previously asymptomatically infected individuals from susceptibles
 S(actvA,:)=0; % remove initially actively asymptomatically infected individuals from susceptibles

@@ -29,7 +29,7 @@ if nargin==0
     pI0=0.15; % proportion of infections that lead to VL
     hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases
     typ='Exp'; % type of transmission kernel
-    niters=1e4; % no. of MCMC iterations
+    niters=1e1; % no. of MCMC iterations
     plotOutpt=true; % plot output (true) or not (false)
     rslts='MCMC_NBIP_PKDL_ASX.mat'; % name of results file for output
     para=1; % paras to include in the data
@@ -2084,19 +2084,19 @@ for k=1:niters
 %         fprintf('LL6=%6.4g\n', terms(k,6));
         fprintf('Parameter block update acceptance rate=%5.3f%%\n',100*acc_rate_p);
         
-%         % Plot output
-%         if plotOutpt && k>burnin % ignore burn-in period
-%             z=burnin+1:k; % iterations to plot
-%             figure(4);
-%             [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(z,LL,p,np,pname,prior_mean,p1,a,b,n,tmax,I,RpreD,DpreR,tI,tR,tD,tRLm,tRLRm,nbins,scrnsz);            
-%             figure(5);
-%             PlotTrace(z,p,np,pname,p1,mode_p,HPDI,mode_p1,HPDI1,scrnsz)
-%             drawnow
-%             for j=1:np
-%                 fprintf(['mode ' pname{j} '=%6.4g\n'], mode_p(j));
-%             end
-%             fprintf('mode p1=%6.4g\n', mode_p1);
-%         end
+        % Plot output
+        if plotOutpt && k>burnin % ignore burn-in period
+            z=burnin+1:k; % iterations to plot
+            figure(4);
+            [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(z,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,RL,tI,tR,tD,tRL,tRLR,nbins,scrnsz);            
+            figure(5);
+            PlotTrace(z,p,np,pname,p1,mode_p,HPDI,mode_p1,HPDI1,scrnsz)
+            drawnow
+            for j=1:np
+                fprintf(['mode ' pname{j} '=%6.4g\n'], mode_p(j));
+            end
+            fprintf('mode p1=%6.4g\n', mode_p1);
+        end
     end
 end
  
@@ -2114,7 +2114,6 @@ fprintf('Asymptomatic infection removal acceptance rate is %5.3f%%.\n',100*acc_r
 fprintf('Asymptomatic infection time move acceptance rate is %5.3f%%.\n',100*acc_rate_Amov);
 fprintf('Asymptomatic infection addition acceptance rate is %5.3f%%.\n',100*acc_rate_Aadd);
 fprintf('Asymptomatic infection period move for PKDL cases w/o VL acceptance rate is %5.3f%%.\n',100*acc_rate_PA);
-% fprintf('Joint beta asymptomatic infection time update acceptance rate is %5.3f%%.\n',100*acc_rate_beta);
 
 %% SAVE OUTPUT
 % Remove first row (initial values) of p

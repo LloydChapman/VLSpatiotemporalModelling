@@ -1,4 +1,3 @@
-% function [meanBckgrnd,meanASX,meanPRESX,meanKA,meanPKDL]=CalcCntrbtnMgrtnAsx(rslts,nsmpls,burnin1)
 function [M,HPDI,iters]=CalcCntrbtnMgrtnAsx(rslts,nsmpls,burnin1)
 
 db='';
@@ -6,20 +5,7 @@ rng=[];
 
 load(rslts)
 
-% Remove first row (initial values) of p if it's not already been removed
-% so that same index can be used for p and missing data
-if size(p,1)==niters+1
-    p=p(2:end,:);
-end
-% Overwrite asymptomatic infection and recovery times for PKDL cases w/o
-% prior VL, if they were not saved, with values from final iteration
-if tAs(PA(1))==tmax+2
-    tAs(PA,:)=repmat(tA(PA),1,niters);
-    tRAs(PA,:)=repmat(tRA(PA),1,niters);
-end
-
 % Load data
-% load(db)
 load('data_final2.mat')
 % Select data for para
 data=data(ismember(data.PARA,para),:);
@@ -35,15 +21,11 @@ if size(d0,2)>size(d0,1)
     d0=speye(nHH);
 end
 
-% Rename hP as hv if hP exists
-if exist('hP','var')
-    hv=hP;
-end
-
 if ~exist('z','var')
     z=burnin1+1:niters;
 end
 
+% Get indices of nsmpls to be drawn from the MCMC chain with the burn-in discarded
 iters=randperm(numel(z),nsmpls);
 
 hP=zeros(nIPNIA,tmax);
@@ -66,37 +48,20 @@ for i=1:nIMP
     hP(nI+nPI+nA+nIMI+i,tIM(j)+1:min(tRP(j),tmax))=hv(j);
 end
 
-% Bckgrnd=zeros(nsmpls,tmax);
-% ASX=zeros(nsmpls,tmax);
-% PRESX=zeros(nsmpls,tmax);
-% KA=zeros(nsmpls,tmax);
-% PKDL=zeros(nsmpls,tmax);
-nsrcs=5;
+% Create matrix for storing contribution from each infection state to total 
+% force of infection (FOI) on all individuals
+nsrcs=5; % number of infection sources (infectious states)
 FOI=zeros(nsmpls,tmax,nsrcs);
 
-% BckgrndonS=zeros(nsmpls,tmax);
-% ASXonS=zeros(nsmpls,tmax);
-% PRESXonS=zeros(nsmpls,tmax);
-% KAonS=zeros(nsmpls,tmax);
-% PKDLonS=zeros(nsmpls,tmax);
+% Create matrix for storing contribution from each infection state to total 
+% FOI on all susceptible individuals
 FOIonS=zeros(nsmpls,tmax,nsrcs);
 
-nE=sum(sum(tEm));
-% Bckgrndm=zeros(nE,nsmpls);
-% ASXm=zeros(nE,nsmpls);
-% PRESXm=zeros(nE,nsmpls);
-% KAm=zeros(nE,nsmpls);
-% PKDLm=zeros(nE,nsmpls);
-% lambdaEm=zeros(nE,nsmpls);
+% Create matrix for storing contribution from each infection state to FOIs 
+% on KA cases at their infection times
+nE=sum(sum(tEm)); % number of cases infected during study after initial incubation period window
 FOIonE=zeros(nsmpls,nE,nsrcs);
 
-% Bckgrndprop=zeros(nsmpls,1);
-% ASXprop=zeros(nsmpls,1);
-% PRESXprop=zeros(nsmpls,1);
-% KAprop=zeros(nsmpls,1);
-% PKDLprop=zeros(nsmpls,1);
-
-% Sus=zeros(nsmpls,tmax);
 I2=ismember(I,I1);
 % figure(1);
 for k=1:nsmpls
@@ -107,11 +72,6 @@ for k=1:nsmpls
     tE=uint32(tEs(:,m)); % N.B. tEs has dimensions #KA cases x #iterations
     tEm=false(n,tmax);
     tEm((tE(I2)-1)*n+uint32(I1))=1;
-    %     for i=1:nI
-    %         if tI(I(i))>maxIP
-    %             tEm(I(i),tE(i))=1;
-    %         end
-    %     end
     tA=uint32(tAs(:,m));
     tRA=uint32(tRAs(:,m));
     Asx=uint32(find(tA>=1 & tA<=tmax));
@@ -121,11 +81,7 @@ for k=1:nsmpls
     actvA=uint32(find(tA==0 & tRA>0));
     IM_INprevAactvA=IM_IN(ismember(IM_OUT,[prevA;actvA]));
     
-    if ~inclLST
-        S=1-max(preB,preIM)-max(max(max(max(cumsum(tEm,2),cumsum(tAm,2)),cumsum(tPm,2)),cumsum(tDm,2)),cumsum(tEMm,2)); % don't remove LST+ individuals
-    else
-        S=1-max(preB,preIM)-max(max(max(max(max(cumsum(tEm,2),cumsum(tAm,2)),cumsum(tPm,2)),cumsum(tDm,2)),cumsum(tLm,2)),cumsum(tEMm,2)); % remove LST+ individuals from susceptibles
-    end
+    S=1-max(preB,preIM)-max(max(max(cumsum(tEm,2),cumsum(tAm,2)),cumsum(tDm,2)),cumsum(tEMm,2));
     S(prevK,:)=0; % remove previous KA cases from susceptibles
     S(prevA,:)=0; % remove previously asymptomatically infected individuals from susceptibles
     S(actvA,:)=0; % remove initially actively asymptomatically infected individuals from susceptibles
@@ -146,7 +102,6 @@ for k=1:nsmpls
     tI(ANONR)=tIsANONR(:,m);
     tRorD(ANONR)=tRsANONR(:,m);
     tRorD(AONR)=tRsAONR(:,m);
-    tRL(RLO)=tRLsRLO(:,m);
     tRLR(RLO)=tRLRsRLO(:,m);
     tRL(RLNO)=tRLsRLNO(:,m);
     tRLR(RLNO)=tRLRsRLNO(:,m);
@@ -215,60 +170,31 @@ for k=1:nsmpls
     lambdaEE=lambdaE(tEm);
     lambdaIE=lambdaI(tEm);
     lambdaPE=lambdaP(tEm);
-% %     lambdaAA=lambdaA(tAm);
-% %     lambdaEA=lambdaE(tAm);
-% %     lambdaIA=lambdaI(tAm);
-% %     lambdaPA=lambdaP(tAm);
-%     lambdaEtot=lambdaAE+lambdaIE+lambdaPE+epsilon;
-% %     figure(1); %plot(lambdaPE./lambdaE); pause(0.01)
-% %     plot(movmean(lambdaPE./lambdaE,10))
     
-    % Total FOIs from background, KA, PKDL
-%     Bckgrnd(k,:)=n*epsilon; % SHOULD IT BE n OR THE ACTUAL NO. OF PEOPLE (I.E. NOT INCL. UNBORN INDIVIDUALS, DEAD INDIVIDUALS, 2ND OBS FOR INTERNAL MIGRATORS ETC.)
-%     ASX(k,:)=sum(lambdaA);
-%     PRESX(k,:)=sum(lambdaE);
-%     KA(k,:)=sum(lambdaI);
-%     PKDL(k,:)=sum(lambdaP);
+    % Calculate contributions from background, asymptomatics, 
+    % presymptomatics, KA cases and PKDL cases to:
+    
+    % total FOI on all individuals
     FOI(k,:,1)=n*epsilon;
     FOI(k,:,2)=sum(lambdaA);
     FOI(k,:,3)=sum(lambdaE);
     FOI(k,:,4)=sum(lambdaI);    
     FOI(k,:,5)=sum(lambdaP);
     
-    % Total FOIs on susceptibles S from background, KA, PKDL
-%     BckgrndonS(k,:)=sum(epsilon*S);
-%     ASXonS(k,:)=sum(lambdaA.*S);
-%     PRESXonS(k,:)=sum(lambdaE.*S);
-%     KAonS(k,:)=sum(lambdaI.*S);
-%     PKDLonS(k,:)=sum(lambdaP.*S);
+    % total FOI on all susceptible individuals 
     FOIonS(k,:,1)=sum(epsilon*S);
     FOIonS(k,:,2)=sum(lambdaA.*S);
     FOIonS(k,:,3)=sum(lambdaE.*S);
     FOIonS(k,:,4)=sum(lambdaI.*S);
     FOIonS(k,:,5)=sum(lambdaP.*S);
     
-    % FOIs on KA cases at their infection times
-%     Bckgrndm(:,k)=epsilon;
-%     ASXm(:,k)=lambdaAE;
-%     PRESXm(:,k)=lambdaEE;
-%     KAm(:,k)=lambdaIE;
-%     PKDLm(:,k)=lambdaPE;
-%     lambdaEm(:,k)=lambdaEtot;
+    % FOIs on KA cases at their infection times 
     FOIonE(k,:,1)=epsilon;
     FOIonE(k,:,2)=lambdaAE;
     FOIonE(k,:,3)=lambdaEE;
     FOIonE(k,:,4)=lambdaIE;
     FOIonE(k,:,5)=lambdaPE;
     
-%     % Proportion of FOIs on KA cases at infection times from background, KA, PKDL
-%     sumlambdaEtot=sum(lambdaEtot);
-%     Bckgrndprop(k)=nI*epsilon/sumlambdaEtot;
-%     ASXprop(k)=sum(lambdaAE)/sumlambdaEtot;
-%     PRESXprop(k)=sum(lambdaEE)/sumlambdaEtot;
-%     KAprop(k)=sum(lambdaIE)/sumlambdaEtot;
-%     PKDLprop(k)=sum(lambdaPE)/sumlambdaEtot;
-    
-%     Sus(k,:)=sum(S);
 end
 
 %% PLOTS
@@ -284,158 +210,31 @@ t=startyr+(0:tmax-1)/12;
 
 %% Plot FOI on whole population
 nbins=50;
-% M_Bckgrnd=zeros(1,tmax);
-% M_ASX=zeros(1,tmax);
-% M_PRESX=zeros(1,tmax);
-% M_KA=zeros(1,tmax);
-% M_PKDL=zeros(1,tmax);
-% HPDI_Bckgrnd=zeros(tmax,2);
-% HPDI_ASX=zeros(tmax,2);
-% HPDI_PRESX=zeros(tmax,2);
-% HPDI_KA=zeros(tmax,2);
-% HPDI_PKDL=zeros(tmax,2);
-% for i=1:tmax
-%     [M_Bckgrnd(i),HPDI_Bckgrnd(i,:)]=CalcModeAndHPDI(Bckgrnd(:,i),nbins);    
-%     [M_ASX(i),HPDI_ASX(i,:)]=CalcModeAndHPDI(ASX(:,i),nbins);
-%     [M_PRESX(i),HPDI_PRESX(i,:)]=CalcModeAndHPDI(PRESX(:,i),nbins);
-%     [M_KA(i),HPDI_KA(i,:)]=CalcModeAndHPDI(KA(:,i),nbins);
-%     [M_PKDL(i),HPDI_PKDL(i,:)]=CalcModeAndHPDI(PKDL(:,i),nbins);
-% end
-% 
-% figure;
-% hf=area(t,M);
-% % hf=area(t,[mean(Bckgrnd)',mean(ASX)',mean(PRESX)',mean(KA)',mean(PKDL)']);
-% for i=1:nclrs
-%     hf(i).FaceColor=clrs(i,:);
-% end
-% xlim([t(1) t(end)])
-% set(gca,'FontSize',14)
-% xlabel('Time'); ylabel('Total FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL','Location','Northwest')
-% % saveas(gcf,'AbsltCntrbtnFOIAsxPara1.png','png')
-% 
-% figure;
-% FOItot=ASX+PRESX+KA+PKDL+Bckgrnd;
-% hf1=area(t,[mean(Bckgrnd./FOItot)',mean(ASX./FOItot)',mean(PRESX./FOItot)',mean(KA./FOItot)',mean(PKDL./FOItot)']);
-% for i=1:nclrs
-%     hf1(i).FaceColor=clrs(i,:);
-% end
-% xlim([t(1) t(end)])
-% ylim([0 1])
-% set(gca,'FontSize',14)
-% xlabel('Time'); ylabel('Relative contribution to FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL')
-% % saveas(gcf,'RltveCntrbtnFOIAsxPara1.png','png')
-
 PlotCntrbtnModeAndHPDI(FOI,nbins,nsrcs,t,clrs,'Time','FOI (mnth^{-1})',true)
-% saveas(gcf,'AbsltCntrbtnFOIAsxPara1HPDI.png','png')
 saveas(gcf,'AbsltCntrbtnFOIAsx')
 saveas(gcf,'AbsltCntrbtnFOIAsx.png')
 PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOI,sum(FOI,3)),nbins,nsrcs,t,clrs,'Time','Relative contribution to FOI',true)
-% saveas(gcf,'RltveCntrbtnFOIAsxPara1HPDI.png','png')
 saveas(gcf,'RltveCntrbtnFOIAsx')
 saveas(gcf,'RltveCntrbtnFOIAsx.png')
 
 %% Plot FOI on susceptibles
-% figure;
-% hf2=area(t,[mean(BckgrndonS)',mean(ASXonS)',mean(PRESXonS)',mean(KAonS)',mean(PKDLonS)']);
-% for i=1:nclrs
-%     hf2(i).FaceColor=clrs(i,:);
-% end
-% xlim([t(1) t(end)])
-% set(gca,'FontSize',14)
-% xlabel('Time'); ylabel('Total FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL')
-% % saveas(gcf,'AbsltCntrbtnFOIonSAsxPara1.png','png')
-%
-% figure;
-% FOIonS=ASXonS+PRESXonS+KAonS+PKDLonS+BckgrndonS;
-% hf3=area(t,[mean(BckgrndonS./FOIonS)',mean(PRESXonS./FOIonS)',mean(ASXonS./FOIonS)',mean(KAonS./FOIonS)',mean(PKDLonS./FOIonS)']);
-% for i=1:nclrs
-%     hf3(i).FaceColor=clrs(i,:);
-% end
-% xlim([t(1) t(end)])
-% ylim([0 1])
-% set(gca,'FontSize',14)
-% xlabel('Time'); ylabel('Relative contribution to FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL')
-% % saveas(gcf,'RltveCntrbtnFOIonSAsxPara1.png','png')
-
 PlotCntrbtnModeAndHPDI(FOIonS,nbins,nsrcs,t,clrs,'Time','FOI x S (mnth^{-1})',true)
-% saveas(gcf,'AbsltCntrbtnFOIonSAsxPara1HPDI.png','png')
 saveas(gcf,'AbsltCntrbtnFOIonSAsx')
 saveas(gcf,'AbsltCntrbtnFOIonSAsx.png')
 PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonS,sum(FOIonS,3)),nbins,nsrcs,t,clrs,'Time','Relative contribution to FOI x S',true)
-% saveas(gcf,'RltveCntrbtnFOIonSAsxPara1HPDI.png','png')
 saveas(gcf,'RltveCntrbtnFOIonSAsx')
 saveas(gcf,'RltveCntrbtnFOIonSAsx.png')
 
-%% Plot FOIs on cases at infection times
-% Bckgrndindvdl=mean(Bckgrndm,2);
-% ASXindvdl=mean(ASXm,2);
-% PRESXindvdl=mean(PRESXm,2);
-% KAindvdl=mean(KAm,2);
-% PKDLindvdl=mean(PKDLm,2);
-% figure; hf4=area([Bckgrndindvdl,PRESXindvdl,ASXindvdl,KAindvdl,PKDLindvdl]);
-% for i=1:nclrs
-%     hf4(i).FaceColor=clrs(i,:);
-% end
-% xlim([1 nE])
-% set(gca,'FontSize',14)
-% xlabel('Case number (by onset)'); ylabel('FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL','Location','Northwest')
-% % saveas(gcf,'AbsltIndvdlCntrbtnAsxPara1.png','png')
-%
-% RltveBckgrndindvdl=mean(Bckgrndm./lambdaEm,2);
-% RltveASXindvdl=mean(ASXm./lambdaEm,2);
-% RltvePRESXindvdl=mean(PRESXm./lambdaEm,2);
-% RltveKAindvdl=mean(KAm./lambdaEm,2);
-% RltvePKDLindvdl=mean(PKDLm./lambdaEm,2);
-% figure; hf5=area([RltveBckgrndindvdl,RltveASXindvdl,RltvePRESXindvdl,RltveKAindvdl,RltvePKDLindvdl]);
-% for i=1:nclrs
-%     hf5(i).FaceColor=clrs(i,:);
-% end
-% xlim([1 nE]); ylim([0 1]);
-% set(gca,'FontSize',14)
-% xlabel('Case number (by onset)'); ylabel('Relative contribution to FOI')
-% legend('Bckgrnd','Asx','Presx','VL','PKDL')
-% % saveas(gcf,'RltveIndvdlCntrbtnAsxPara1.png','png')
-
+%% Plot FOIs on KA cases at infection times
 totFOIonE=sum(FOIonE,3);
-% figure; area(reshape(mean(FOIonE,1),nE,nsrcs))
-% figure; plot(reshape(mean(FOIonE,1),nE,nsrcs))
 PlotCntrbtnModeAndHPDI(FOIonE,nbins,nsrcs,1:nE,clrs,'Case number (by onset)','FOI on case (mnth^{-1})',false)
-% saveas(gcf,'AbsltIndvdlCntrbtnAsxPara1HPDI.png','png')
 saveas(gcf,'AbsltIndvdlCntrbtnAsx')
 saveas(gcf,'AbsltIndvdlCntrbtnAsx.png')
 PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonE,totFOIonE),nbins,nsrcs,1:nE,clrs,'Case number (by onset)','Relative contribution to FOI',false)
-% saveas(gcf,'RltveIndvdlCntrbtnAsxPara1HPDI.png','png')
 saveas(gcf,'RltveIndvdlCntrbtnAsx')
 saveas(gcf,'RltveIndvdlCntrbtnAsx.png')
 
-%% Overall contribution to transmission over the course of the epidemic
-% figure; hold on
-% hf6=histogram(Bckgrndprop);
-% hf6.FaceColor=clrs(1,:);
-% hf7=histogram(ASXprop);
-% hf7.FaceColor=clrs(2,:);
-% hf8=histogram(PRESXprop);
-% hf8.FaceColor=clrs(3,:);
-% hf9=histogram(KAprop);
-% hf9.FaceColor=clrs(4,:);
-% hf10=histogram(PKDLprop);
-% hf10.FaceColor=clrs(5,:);
-% legend('Bckgrnd','Asx','Presx','VL','PKDL')
-% hold off
-% % saveas(gcf,'RltveOvrlCntrbtnAsxPara1.png','png')
-% % figure; plot(1:nsmpls,Bckgrnd,1:nsmpls,KA,1:nsmpls,PKDL)
-% 
-% meanBckgrnd=mean(Bckgrndprop);
-% meanPRESX=mean(PRESXprop);
-% meanASX=mean(ASXprop);
-% meanKA=mean(KAprop);
-% meanPKDL=mean(PKDLprop);
-
+%% Overall contribution to new KA cases over the course of the epidemic
 figure; hold on
 M=zeros(nsrcs,1);
 HPDI=zeros(nsrcs,2);
@@ -454,5 +253,5 @@ hold off
 saveas(gcf,'RltveOvrlCntrbtnAsx')
 saveas(gcf,'RltveOvrlCntrbtnAsx.png')
 
-%% Save mode and HPDI for relative overall contribution
+%% Save mode and HPDI for relative overall contribution of each infection state to FOIs on KA cases at their infection times
 save('ModeAndHPDIRltveOvrlCntrbtnAsx','M','HPDI','iters')

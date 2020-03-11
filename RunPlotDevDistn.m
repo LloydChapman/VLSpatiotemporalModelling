@@ -1,4 +1,4 @@
-function RunPlotDevDistn(rslts,burnin,IPD,str,h0s,h40s,delta0s)
+function RunPlotDevDistn(rslts,burnin,IPD,h0s,h40s,delta0s)
 figure;
 nMdls=numel(rslts);
 
@@ -14,6 +14,6 @@ for i=1:nMdls
 end
 % legend(hL,cellfun(@(x)x(11:end),rslts,'UniformOutput',false),'Interpreter','none')
 legend(hf,lgd,'Interpreter','LaTeX')
-saveas(gcf,['PstrDevDistns' IPD str])
-saveas(gcf,['PstrDevDistns' IPD str '.eps'],'epsc')
-saveaspdf(gcf,['PstrDevDistns' IPD str])
+saveas(gcf,['PstrDevDistns' IPD])
+saveas(gcf,['PstrDevDistns' IPD '.eps'],'epsc')
+saveaspdf(gcf,['PstrDevDistns' IPD])

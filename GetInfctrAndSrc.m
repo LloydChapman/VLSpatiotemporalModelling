@@ -7,13 +7,9 @@ lambdaIij=rateI1.*h(:,infctn)';
 lambdaPij=rateI1.*hP(:,infctn)';
 lambdaPAij=ratePA(I1,:).*hPA(:,infctn)';
 lambdaij=[lambdaAij,lambdaIij,lambdaPij,lambdaPAij,p(3)*ones(nI1,1)];
-% lambdai=sum(lambdaij,2);
-% pi=sum(1-exp(-lambdaij),2,'omitnan');
 lambdai=sum(lambdaij,2,'omitnan');
-% onset=[tA;onsetI;onsetP;onsetPA;NaN];
 onset=[tA;onsetI;onsetPA;NaN];
 
-% Rts=zeros(3,tmax);
 dAI1=dHH(ib(I1),ib);
 dI1=dHH(ib(I1),ib(IPNIA));
 dPAI1=dHH(ib(I1),ib(PA));
@@ -23,13 +19,8 @@ tijI=bsxfun(@minus,infctn,onsetI');
 tijP=bsxfun(@minus,infctn,onsetP');
 tijPA=bsxfun(@minus,infctn,onsetPA');
 [RjA,diA,tiA]=CalcRjAnddi(lambdaAij,lambdai,dAI1,tijA);
-% Rts(1,:)=CalcRt(RjA,onsetA,tmax);
 [RjI,diI,tiI]=CalcRjAnddi(lambdaIij,lambdai,dI1,tijI);
-% Rts(2,:)=CalcRt(RjI,onsetI,tmax);
 [RjP,diP,tiP]=CalcRjAnddi([lambdaPij,lambdaPAij],lambdai,[dI1,dPAI1],[tijP,tijPA]);
-% Rts(3,:)=CalcRt(RjP,[onsetP;onsetPA],tmax);
-% RjPA=CalcRj(lambdaPAij,lambdai);
-% RtPA=CalcRt(RjPA,onsetPA,tmax);
 [Rj,di,ti,pij_ti]=CalcRjAnddi(lambdaij,lambdai,[dAI1,dI1,dI1,dPAI1,NaN(nI1,1)],[tijA,tijI,tijP,tijPA,NaN(nI1,1)]);
 % Add together numbers of secondary infections from VL and PKDL episodes of 
 % cases

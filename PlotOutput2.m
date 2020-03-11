@@ -1,4 +1,4 @@
-function [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput2(z,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLO,tRLsRLNO,tRLRsRLO,tRLRsRLNO,niters,nbins,scrnsz)
+function [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput2(z,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,OR,NONR,RNO,ONR,A,ANONR,AONR,RL,RLO,RLNO,tI,tR,tD,tRL,tRLR,tIsNONR,tIsRNO,tRsNONR,tRsONR,tIsANONR,tRsANONR,tRsAONR,tRLsRLNO,tRLRsRLO,tRLRsRLNO,nbins,scrnsz)
 set(gcf, 'Position', [0 70 round(scrnsz(3)/2) scrnsz(4) - 150]);
 mode_p=zeros(1,np); % modal parameter values
 HPDI=zeros(np,2); % highest posterior density intervals
@@ -32,7 +32,6 @@ tRs(ANONR,:)=tRsANONR(:,pp);
 tRs(AONR,:)=tRsAONR(:,pp);
 tRorDm=false(n,tmax,npp);
 tRLs=repmat(tRL,1,npp);
-tRLs(RLO,:)=tRLsRLO(:,pp);
 tRLs(RLNO,:)=tRLsRLNO(:,pp);
 tRLm=false(n,tmax,npp);
 tRLRs=repmat(tRLR,1,npp);

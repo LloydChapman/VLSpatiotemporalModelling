@@ -1,4 +1,4 @@
-function [D,LL]=dev(p,z,p1,nIPNIA,nIandP,IandP,I,tIM,tP,tRP,tEM,tmax,hv,nPI,PI,nI,tR,nIMP,IMP,nA,nIMI,I1,tI,NONR,tIsNONR,tRorD,tRsNONR,RNO,tIsRNO,ONR,tRsONR,ANONR,tIsANONR,tRsANONR,AONR,tRsAONR,RLO,tRLsRLO,tRLRsRLO,RLNO,tRLsRLNO,tRLRsRLNO,tEs,tAs,tRAs,IPs,n,IM_IN,IM_OUT,preB,preIM,tPm,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h0,A,IMI,nRL,RL,tRL,tRLR,tD,INTMIG_OUT,rng,nPA,PA,dHH,dHHsqrd,typ,nHH,ib,f,u,d0,IPNIA,r1,age,S0,p2,S0PA,actvAPA,prevAPA,ss)
+function [D,LL]=dev(p,z,p1,nIPNIA,nIandP,IandP,I,tIM,tP,tRP,tEM,tmax,hv,nPI,PI,nI,tR,nIMP,IMP,nA,nIMI,I1,tI,NONR,tIsNONR,tRorD,tRsNONR,RNO,tIsRNO,ONR,tRsONR,ANONR,tIsANONR,tRsANONR,AONR,tRsAONR,RLO,tRLRsRLO,RLNO,tRLsRLNO,tRLRsRLNO,tEs,tAs,tRAs,IPs,n,IM_IN,IM_OUT,preB,preIM,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h0,A,IMI,nRL,RL,tRL,tRLR,tD,INTMIG_OUT,rng,nPA,PA,dHH,dHHsqrd,typ,nHH,ib,f,u,d0,IPNIA,r1,age,S0,p2,S0PA,actvAPA,prevAPA,ss)
 
 if strcmp(ss,'mean')
     beta=mean(p(z,1));
@@ -54,7 +54,6 @@ for i=1:numel(z)
     tI(ANONR)=tIsANONR(:,k);
     tRorD(ANONR)=tRsANONR(:,k);
     tRorD(AONR)=tRsAONR(:,k);
-    tRL(RLO)=tRLsRLO(:,k);
     tRLR(RLO)=tRLRsRLO(:,k);
     tRL(RLNO)=tRLsRLNO(:,k);
     tRLR(RLNO)=tRLRsRLNO(:,k);
@@ -64,7 +63,7 @@ for i=1:numel(z)
     tRA=uint32(tRAs(:,k));
     IP=IPs(:,k);
     
-    LL(i)=RecalclogL(n,tmax,tE,I2,I1,tA,tRA,IM_IN,IM_OUT,preB,preIM,tPm,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h,nI,I,tIM,tI,h0,tEM,tRorD,nA,nPI,A,nIMI,IMI,nRL,RL,IPNIA,tRL,tRLR,tD,h4,INTMIG_OUT,rng,nPA,PA,tP,tRP,hv,dHH,dHHsqrd,alpha,beta,typ,nHH,ib,f,u,delta,d0,epsilon,pI,IP,r1,p1,age,S0,lambda0,p2,S0PA,actvAPA,prevAPA);
+    LL(i)=RecalclogL(n,tmax,tE,I2,I1,tA,tRA,IM_IN,IM_OUT,preB,preIM,tDm,tEMm,prevK,maxIP,IpreEXTIM,EXTIMsoonI,IpreINTIM,PpreINTIM,PpreEXTIM,h,nI,I,tIM,tI,h0,tEM,tRorD,nA,nPI,A,nIMI,IMI,nRL,RL,IPNIA,tRL,tRLR,tD,h4,INTMIG_OUT,rng,nPA,PA,tP,tRP,hv,dHH,dHHsqrd,alpha,beta,typ,nHH,ib,f,u,delta,d0,epsilon,pI,IP,r1,p1,age,S0,lambda0,p2,S0PA,actvAPA,prevAPA);
 end
 
 D=-2*mean(LL);

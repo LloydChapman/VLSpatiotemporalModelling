@@ -1,26 +1,10 @@
-% function [infctn,infctr,src,dist,times,SI,onsetinfctr,trtmntinfctr,onset,trtmnt,PKDLonset,PKDLtrtmnt,lambdapwmax,infctnA,infctrA,srcA,lambdapwAmax]=CalcInfctrMgrtnAsx(rslts,nsmpls,burnin1)
-% function [infctn,infctr,src,RjI_I,RjP_I,RjA_I,Rj_I,Rts_I,Rt_I,OT,dist,times,SI,onsetinfctr,trtmntinfctr,infctnA,infctrA,srcA,RjI_A,RjP_A,RjA_A,Rj_A,Rts_A,Rt_A,distA,timesA,SIA,onsetinfctrA,trtmntinfctrA,iters,Rj,Rts,Rt]=CalcInfctrMgrtnAsx(rslts,nsmpls,burnin1)
 function [infctn,infctr,src,dists,times,SI,onsetinfctr,rcvryinfctr,meandists,meantimes,infctrmax,srcmax,distsmax,timesmax,SImax,onsetinfctrmax,rcvryinfctrmax,meandistsmax,meantimesmax,RjA_I,RjI_I,RjP_I,Rj_I,Rts_I,Rt_I,diA_I,diI_I,diP_I,di_I,tiA_I,tiI_I,tiP_I,ti_I,infctnA,infctrA,srcA,distsA,timesA,SIA,onsetinfctrA,rcvryinfctrA,infctrmaxA,srcmaxA,distsmaxA,timesmaxA,SImaxA,onsetinfctrmaxA,rcvryinfctrmaxA,RjA_A,RjI_A,RjP_A,Rj_A,Rts_A,Rt_A,diA_A,diI_A,diP_A,di_A,tiA_A,tiI_A,tiP_A,ti_A,iters,OT,Rj,Rts,Rt]=CalcInfctrMgrtnAsx(rslts,nsmpls,burnin1,varargin)
 
-db='';
 rng=[];
 
 load(rslts)
 
-% Remove first row (initial values) of p if it's not already been removed
-% so that same index can be used for p and missing data
-if size(p,1)==niters+1
-    p=p(2:end,:);
-end
-% Overwrite asymptomatic infection and recovery times for PKDL cases w/o
-% prior VL, if they were not saved, with values from final iteration
-if tAs(PA(1))==tmax+2
-    tAs(PA,:)=repmat(tA(PA),1,niters);
-    tRAs(PA,:)=repmat(tRA(PA),1,niters);
-end
-
 % Load data
-% load(db)
 load('data_final2.mat')
 % Select data for para
 data=data(ismember(data.PARA,para),:);
@@ -36,18 +20,9 @@ if size(d0,2)>size(d0,1)
     d0=speye(nHH);
 end
 
-if exist('hP','var')
-    hv=hP;
-end
-
 if ~exist('z','var')
     z=burnin1+1:niters;
 end
-
-% % Get pairwise distance matrices between cases and all other individuals
-% d=dHH(ib,ib(IPNIA));
-% dA=dHH; %(ib,ib);
-% dPA=dHH(ib,ib(PA));
 
 if nargin==3
     iters=randperm(numel(z),nsmpls);
@@ -66,9 +41,8 @@ end
 % 6=PKDL
 % 7=recovered
 % 9=background
-stat=[zeros(n,1),rngm(:,1:end-1)]; %ones(n,tmax);
+stat=[zeros(n,1),rngm(:,1:end-1)];
 stat(Pres0,1)=1;
-% nIPNIA=nI+nPNI+nA+nIMI+nIMP;
 h=zeros(nIPNIA,tmax);
 for i=1:nIMI
     j=IMI(i);
@@ -110,9 +84,6 @@ end
 
 % Make index vector of cases with onset after initial window, i.e. whose
 % infection sources are imputed
-% I1=find(tI>maxIP&~IpreEXTIM&~EXTIMsoonI&~KothrObs&~isinf(tI));
-hidx=find(ismember(IPNIA,I1));
-% I1=find(tI>maxIP&~KothrObs&~IpreEXTIM&~EXTIMsoonI);
 nI1=numel(I1);
 infctn=NaN(nI1,nsmpls);
 infctr=NaN(nI1,nsmpls);
@@ -122,7 +93,6 @@ srcmax=NaN(nI1,nsmpls);
 RjA_I=NaN(nsmpls,n);
 RjI_I=NaN(nsmpls,nIPNIA);
 RjP_I=NaN(nsmpls,nIPNIA+nPA);
-% Rj_Itmp=NaN(nsmpls,n+2*nIPNIA+nPA+1);
 Rj_I=NaN(nsmpls,n+nIPNIA+nPA+1);
 Rts_I=NaN(3,tmax-maxIP,nsmpls);
 Rt_I=zeros(nsmpls,tmax-maxIP);
@@ -145,9 +115,6 @@ rcvryinfctrmax=NaN(nI1,nsmpls);
 timesmax=NaN(nI1,nsmpls);
 SImax=NaN(nI1,nsmpls);
 I2=ismember(I,I1);
-% infctnA=cell(nsmpls,1);
-% infctrA=cell(nsmpls,1);
-% srcA=cell(nsmpls,1);
 infctnA=NaN(n,nsmpls);
 infctrA=NaN(n,nsmpls);
 srcA=NaN(n,nsmpls);
@@ -156,7 +123,6 @@ srcmaxA=NaN(n,nsmpls);
 RjA_A=NaN(nsmpls,n);
 RjI_A=NaN(nsmpls,nIPNIA);
 RjP_A=NaN(nsmpls,nIPNIA+nPA);
-% Rj_Atmp=NaN(nsmpls,n+2*nIPNIA+nPA+1);
 Rj_A=NaN(nsmpls,n+nIPNIA+nPA+1);
 Rts_A=NaN(3,tmax-maxIP,nsmpls);
 Rt_A=zeros(nsmpls,tmax-maxIP);
@@ -196,7 +162,6 @@ for k=1:nsmpls
     tI(ANONR)=tIsANONR(:,m);
     tRorD(ANONR)=tRsANONR(:,m);
     tRorD(AONR)=tRsAONR(:,m);
-    tRL(RLO)=tRLsRLO(:,m);
     tRLR(RLO)=tRLRsRLO(:,m);
     tRL(RLNO)=tRLsRLNO(:,m);
     tRLR(RLNO)=tRLRsRLNO(:,m);
@@ -209,7 +174,6 @@ for k=1:nsmpls
     % Overwrite rows corresponding to KA cases (with onset during study or 
     % active KA at start of study) 
     h([1:nI,nI+nPI+1:nI+nPI+nA],:)=zeros(nI+nA,tmax);
-%     stat([1:nI,nI+nPI+1:nI+nPI+nA],:)=ones(nI+nA,tmax);
     stat([I;A;A1;RAobs2actvA;RAobs2;PA],:)=[zeros(numel([I;A;A1;RAobs2actvA;RAobs2;PA]),1),rngm([I;A;A1;RAobs2actvA;RAobs2;PA],1:end-1)];
     stat(intersect([I;A;A1;RAobs2actvA;RAobs2;PA],Pres0),1)=1;
     % Fill in current infectiousness and status matrices
@@ -280,17 +244,9 @@ for k=1:nsmpls
     end
     
     % Store pre-symptomatic infection times
-%     UNSURE WHETHER OR NOT I SHOULD EXCLUDE INFECTION TIMES WHEN THE 
-%     INDIVIDUAL WASN'T CHOSEN FOR UPDATING - CURRENTLY THEY'RE INCLUDED
-%     I2=intersect(pick(:,j),I1);
-%     nI2=numel(I2);
-%     hidx=find(ismember(IPNIA,I2));
-%     infctn(I2,k)=tE(I2);
     infctn(:,k)=tE(I2);
     Asx=find(tA>=1 & tA<=tmax);
-%     nAsx=sum(Asx);
     nAsx=numel(Asx);
-%     infctnA{k}=tA(Asx);
     infctnA(:,k)=tA;
     
     % Calculate pairwise infectious pressures at infection times
@@ -305,26 +261,17 @@ for k=1:nsmpls
     ratePA=tmp(:,ib(PA));
     
     % Make vector of "onset" times of infectious individuals to pass into function to calculate reproduction numbers
-%     onset=[tI(I);tP(PI);tI(A);tP(I);tP(PI);tP(A);tIM(IMI);tIM(IMP);tA;tP(PA);NaN]; % use immigration time for "onset" time of individuals that had KA/PKDL at time of immigration
     onsetI=[tI(I);tP(PI);tI(A);tIM(IMI);tIM(IMP)]; % use immigration time for "onset" time of individuals that had KA/PKDL at time of immigration
     onsetP=[tP(I);tP(PI);tP(A);tIM(IMI);tIM(IMP)]; % use immigration time for "onset" time of individuals that had KA/PKDL at time of immigration   
     
     [infctr(:,k),src(:,k),infctrmax(:,k),srcmax(:,k),RjA_I(k,:),RjI_I(k,:),RjP_I(k,:),Rj_I(k,:),Rts_I(:,:,k),Rt_I(k,:),diA_I(:,k),diI_I(:,k),diP_I(:,k),di_I(:,k),tiA_I(:,k),tiI_I(:,k),tiP_I(:,k),ti_I(:,k)]=GetInfctrAndSrc(infctn(:,k),rateA,rate,ratePA,hA,h,hP,hPA,p(m,:),I1,[A1;RAobs2actvA;RAobs2],nI1,tA,onsetI,onsetP,tP(PA),dHH,ib,PA,IPNIA,maxIP,tmax,stat,n,nIPNIA);
     [infctrA(Asx,k),srcA(Asx,k),infctrmaxA(Asx,k),srcmaxA(Asx,k),RjA_A(k,:),RjI_A(k,:),RjP_A(k,:),Rj_A(k,:),Rts_A(:,:,k),Rt_A(k,:),diA_A(Asx,k),diI_A(Asx,k),diP_A(Asx,k),di_A(Asx,k),tiA_A(Asx,k),tiI_A(Asx,k),tiP_A(Asx,k),ti_A(Asx,k)]=GetInfctrAndSrc(infctnA(Asx,k),rateA,rate,ratePA,hA,h,hP,hPA,p(m,:),Asx,[A1;RAobs2actvA;RAobs2],nAsx,tA,onsetI,onsetP,tP(PA),dHH,ib,PA,IPNIA,maxIP,tmax,stat,n,nIPNIA);
 
-%     Rt=Rt_I+Rt_A; % Is this right (sum ok)?? NO!
     % Calculate time-dependent population-level effective reproduction
     % numbers - this part must be inside loop as onset changes in each
     % iteration
     onset=[tA;onsetI;tP(PA);NaN];
-%     % Add together numbers of secondary infections from VL and PKDL 
-%     % episodes of cases
-%     Rj_I(k,:)=[Rj_Itmp(k,1:n),Rj_Itmp(k,n+1:n+nIPNIA)+Rj_Itmp(k,n+nIPNIA+1:n+2*nIPNIA),Rj_Itmp(k,n+2*nIPNIA+1:size(Rj_Itmp,2))];
-%     Rj_A(k,:)=[Rj_Atmp(k,1:n),Rj_Atmp(k,n+1:n+nIPNIA)+Rj_Atmp(k,n+nIPNIA+1:n+2*nIPNIA),Rj_Atmp(k,n+2*nIPNIA+1:size(Rj_Atmp,2))];
     [Rt(k,:),Rts(:,:,k)]=CalcRt(Rj_I(k,:)+Rj_A(k,:),RjA_I(k,:)+RjA_A(k,:),RjI_I(k,:)+RjI_A(k,:),RjP_I(k,:)+RjP_A(k,:),onset,tA,onsetI,maxIP,tmax);
-%     Rts(1,:,k)=CalcRt(RjA_I(k,:)+RjA_A(k,:),tA,tmax);
-%     Rts(2,:,k)=CalcRt(RjI_I(k,:)+RjI_A(k,:),onsetI,tmax);
-%     Rts(3,:,k)=CalcRt(RjP_I(k,:)+RjP_A(k,:),[onsetP;tP(PA)],tmax);
     
     OT(k,:)=[tRA-tA;min(tRorD(I),tEM(I))-tI(I);NaN(nPI,1);min(tRorD(A),tEM(A))-tI(A);min(tRorD(IMI),tEM(IMI))-tIM(IMI);NaN(nIMP,1);min(min(tRP(I),tEM(I)),tmax)-tP(I);min(min(tRP(PI),tEM(PI)),tmax)-tP(PI);NaN(nA,1);NaN(nIMI,1);min(min(tRP(IMP),tEM(IMP)),tmax)-tIM(IMP);min(min(tRP(PA),tEM(PA)),tmax)-tP(PA);NaN]';
     % deal with internal migrators who had PKDL in their 2nd observation 
@@ -340,26 +287,15 @@ for k=1:nsmpls
     % Get infection distances and intervals for most likely infectors in each tree
     [distsmax(:,k),onsetinfctrmax(:,k),rcvryinfctrmax(:,k),timesmax(:,k),SImax(:,k)]=GetDistsAndTimes(infctn(:,k),infctrmax(:,k),srcmax(:,k),dHH,ib,I1,tA,tI,tP,tRorD,tRP);
     [distsmaxA(Asx,k),onsetinfctrmaxA(Asx,k),rcvryinfctrmaxA(Asx,k),timesmaxA(Asx,k),SImaxA(Asx,k)]=GetDistsAndTimes(infctnA(Asx,k),infctrmaxA(Asx,k),srcmaxA(Asx,k),dHH,ib,Asx,tA,tI,tP,tRorD,tRP);    
-
-%     [dist,onsetinfctr,trtmntinfctr,times,SI]=GetDistsAndTimes(k,dist,onsetinfctr,trtmntinfctr,times,SI,infctn,infctr,src,dHH,ib,I1,tA,tI,tP,tRorD,tRP);
-%     [distA,onsetinfctrA,trtmntinfctrA,timesA,SIA]=GetDistsAndTimes(k,distA,onsetinfctrA,trtmntinfctrA,timesA,SIA,infctnA,infctrA,srcA,dHH,ib,Asx,tA,tI,tP,tRorD,tRP);
     
 end
-% onset=tI(I);
-% trtmnt=tRorD(I);
-% PKDLonset=tP(I);
-% PKDLtrtmnt=tRP(I);
 
 %% Calculate total individual-level effective reproduction numbers (sum of R's for new VL cases and new asx infctns)
-% Rj_I=[RjA_I,RjI_I,RjP_I];
-% Rj_A=[RjA_A,RjI_A,RjP_A];
 Rj=Rj_I+Rj_A;
-% idxI=[1:nI,nI+nPI+nA+1:nI+nPI+nA+nIMI];
 idxI=[find(ismember(I,I1));nI+nPI+nA+1:nI+nPI+nA+nIMI]; % include IMI as their onset time > maxIP
 RjI_I=RjI_I(:,idxI);
 RjI_A=RjI_A(:,idxI);
 RjI=RjI_I+RjI_A;
-% idxP=[find(ismember(IPNIA,IandP));(nI+1:nI+nPI)',(nIPNIA+1:nIPNIA+nPA)'];
 idxP=find(ismember([I;PI;NaN(nA,1);IMI;IMP;PA],[IandP;PI;IMP;PA])); % replace indices for initially active KA cases by NaN to avoid duplication of initially active KA cases that later developed PKDL
 RjP_I=RjP_I(:,idxP);
 RjP_A=RjP_A(:,idxP);
@@ -367,8 +303,6 @@ RjP=RjP_I+RjP_A;
 RjA=RjA_I+RjA_A;
 
 %% Calculate distances to infectors for VL cases & asx infctns
-% di_I=diA_I+diI_I+diP_I;
-% di_A=diA_A+diI_A+diP_A;
 di=[di_I;di_A];
 diA=[diA_I;diA_A];
 diI=[diI_I;diI_A];
@@ -384,10 +318,7 @@ clrs=[0.96 0.9 0.8;[254 195 87]/255;[245 150 79]/255;0.8 0.255 0.145;[81 130 187
 clrs=clrs([2,4,5],:);
 
 %% Plot individual-level effective reproduction numbers for VL and PKDL cases
-%%%%% NEED TO REMOVE CASES WHO ONLY MIGRATED INTO THE STUDY AREA AFTER THEY
-%%%%% HAD VL/PKDL!!
 figure;
-% PlotRjDistn(RjA,1,'Mean no. secondary infections','tex',clrs(1,:)); hold on
 edges=0:ceil(max(max(mean(RjI,1)),max(mean(RjP,1))));
 PlotRjDistn(RjI,1,'Mean no. secondary infections','tex',clrs(2,:),edges); hold on
 PlotRjDistn(RjP,1,'Mean no. secondary infections','tex',clrs(3,:),edges) 
@@ -437,7 +368,6 @@ plot(mean(OT(:,n+nIPNIA+idxP),1),meanRjP,'.','Color',clrs(3,:),'MarkerSize',14)
 set(gca,'FontSize',14)
 legend(gca,{'Asx','VL','PKDL'},'Location','NorthWest')
 xlabel('Onset-to-recovery time (months)'); ylabel('Mean no. secondary infections')
-% xlim([0 20])
 hold off
 saveas(gcf,'RjVsOT')
 saveas(gcf,'RjVsOT.eps','epsc')
@@ -445,7 +375,6 @@ saveas(gcf,'RjVsOT.png')
 
 %% Plot VL and PKDL case reproduction numbers for new infections leading to VL
 figure;
-% PlotRjDistn(RjA_I,1,'Mean no. secondary VL cases','tex',clrs(1,:)); hold on
 edges1=0:0.2:ceil(max(max(mean(RjI_I,1)),max(mean(RjP_I,1))));
 PlotRjDistn(RjI_I,1,'Mean no. secondary VL cases','tex',clrs(2,:),edges1); hold on
 PlotRjDistn(RjP_I,1,'Mean no. secondary VL cases','tex',clrs(3,:),edges1);
@@ -515,9 +444,6 @@ saveas(gcf,'diDistnIandA.png')
 median(mean(di_A,2,'omitnan'),'omitnan')
 median(mean(di_I,2,'omitnan'),'omitnan')
 
-% NOT SURE THIS MAKES SENSE AND THAT I CAN BREAKDOWN THE DISTANCES FROM
-% DIFF INFCTN SOURCES LIKE THIS. IS THE CNDTNL PROB RIGHT, OR SHOULD pi BE
-% JUST THE SUM OVER THE TYPE OF INFCTN IN CalcRjAnddi? ASK GRAHAM
 figure;
 PlotRjDistn(diA,2,'$$\overline{d_i}$$ (m)','latex',clrs(1,:)); hold on
 PlotRjDistn(diI,2,'$$\overline{d_i}$$ (m)','latex',clrs(2,:)) 
@@ -591,17 +517,4 @@ srcidx=[4,6];
 [meandistsmax,meantimesmax]=RunPlotDistsAndTimes(infctrmax,srcmax,distsmax,timesmax,srcidx,clrs(2:3,:),'MeanInfctrToInfcteeDistsMostLikelyInfctrs','MeanInfctrOnsetToInfcteeInfctnTimesMostLikelyInfctrs');
 
 %% Save output
-% save ReffCalcsPara1
 save('ReffCalcs','infctn','infctr','src','dists','times','SI','onsetinfctr','rcvryinfctr','meandists','meantimes','infctrmax','srcmax','distsmax','timesmax','SImax','onsetinfctrmax','rcvryinfctrmax','meandistsmax','meantimesmax','RjA_I','RjI_I','RjP_I','Rj_I','Rts_I','Rt_I','diA_I','diI_I','diP_I','di_I','tiA_I','tiI_I','tiP_I','ti_I','infctnA','infctrA','srcA','distsA','timesA','SIA','onsetinfctrA','rcvryinfctrA','infctrmaxA','srcmaxA','distsmaxA','timesmaxA','SImaxA','onsetinfctrmaxA','rcvryinfctrmaxA','RjA_A','RjI_A','RjP_A','Rj_A','Rts_A','Rt_A','diA_A','diI_A','diP_A','di_A','tiA_A','tiI_A','tiP_A','ti_A','iters','OT','Rj','Rts','Rt')
-
-%%
-figure;
-histogram([dists(src==2);distsA(src==2)],'Normalization','pdf'); hold on
-histogram([dists(src==4);distsA(src==4)],'Normalization','pdf')
-histogram([dists(src==6);distsA(src==6)],'Normalization','pdf')
-set(gca,'FontSize',14)
-legend(gca,'Asx','VL','PKDL')
-xlabel('Infection distances (m)')
-ylabel('Density')
-%%
-% figure; histogram2(mean(di,2,'omitnan'),mean(ti,2,'omitnan'),'Normalization','pdf','DisplayStyle','tile')
