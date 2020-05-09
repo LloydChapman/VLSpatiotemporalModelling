@@ -492,12 +492,16 @@ IM_INAsx=IM_IN(ismember(IM_OUT,Asx));
 RAobs1=IM_OUTAsx(tRA(IM_OUTAsx)>rng(IM_OUTAsx,2)-1);
 RAobs2=IM_INAsx(tRA(IM_OUTAsx)>rng(IM_OUTAsx,2)-1);
 
-% Fit negative binomial distribution to dormant infection period
-% distribution
-RP=tP-tR;
-pars1=nbinfit(RP(RP>=0));
-r3=pars1(1);
-p3=pars1(2);
+% % Fit negative binomial distribution to dormant infection period
+% % distribution
+% RP=tP-tR;
+% pars1=nbinfit(RP(RP>=0));
+% r3=pars1(1);
+% p3=pars1(2);
+% Load parameters for negative binomial distribution fitted to dormant
+% infection period for full dataset
+load('FixedParams','r3'); 
+load('FixedParams','p3'); 
 % Use this to draw asymptomatic recovery times and infection times for PKDL
 % cases w/o prior KA
 % N.B. None of the PKDL cases without prior KA internally migrated, so
