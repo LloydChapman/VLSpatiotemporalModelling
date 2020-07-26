@@ -77,7 +77,7 @@ for i=1:npara
     l{i}=num2str(para(i));
 end
 figure; plot(mos,pop)
-xlabel('Time'); ylabel('Population')
+xlabel('Year'); ylabel('Population')
 hl=legend(l); title(hl,'Para')
 ovrl_pop=sum(pop,1);
 figure; plot(mos,ovrl_pop)
@@ -87,7 +87,7 @@ xlabel('Year'); ylabel('Total population')
 inc=1e4*12*cases./pop;
 figure; plot(mos,inc)
 hl=legend(l); title(hl,'Para')
-xlabel('Time'); ylabel('VL incidence (cases/10,000/yr)')
+xlabel('Year'); ylabel('VL incidence (cases/10,000/yr)')
 saveas(gcf,'ParaMonthlyKAinc')
 saveas(gcf,'ParaMonthlyKAinc.eps','epsc')
 
@@ -95,7 +95,7 @@ saveas(gcf,'ParaMonthlyKAinc.eps','epsc')
 incP=1e4*12*casesP./pop;
 figure; plot(mos,incP)
 hl=legend(l); title(hl,'Para')
-xlabel('Time'); ylabel('PKDL incidence (cases/10,000/yr)')
+xlabel('Year'); ylabel('PKDL incidence (cases/10,000/yr)')
 saveas(gcf,'ParaMonthlyPKDLinc')
 saveas(gcf,'ParaMonthlyPKDLinc.eps','epsc')
 
@@ -108,7 +108,7 @@ figure; h=plot(mos,ovrl_inc,mos,ovrl_incP);
 h(1).Color=[0.8 0.255 0.145];
 h(2).Color=[81 130 187]/255;
 set(gca,'FontSize',24)
-xlabel('Time'); ylabel('Incidence (cases/10,000/yr)'); legend('VL','PKDL')
+xlabel('Year'); ylabel('Incidence (cases/10,000/yr)'); legend('VL','PKDL')
 xlim([startyr endyr+1])
 saveas(gcf,'MonthlyKAandPKDLinc')
 saveas(gcf,'MonthlyKAandPKDLinc.eps','epsc')

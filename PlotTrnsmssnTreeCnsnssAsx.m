@@ -38,7 +38,7 @@ infctnA(infctnA==tmax+1)=NaN;
 % Set plotting colours
 clrs=[[254 224 77]/255;[254 195 87]/255;[245 150 79]/255;0.8 0.255 0.145;[173 163 198]/255;[81 130 187]/255;[146 208 88]/255];
 figure; 
-set(gcf,'Units','Normalized','Position',[0 0 0.33 0.47])
+set(gcf,'Units','Normalized','Position',[0 0 0.37125 0.52875])
 set(0,'DefaultLegendAutoUpdate','off')
 h=plot(lon,lat,'.','MarkerSize',8,'MarkerEdgeColor',clrs(1,:),'MarkerFaceColor',clrs(1,:)); hold on
 x_sclbar=lon_rng(1)+0.02*(lon_rng(2)-lon_rng(1));

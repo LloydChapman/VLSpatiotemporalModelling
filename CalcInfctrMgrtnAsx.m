@@ -357,8 +357,8 @@ saveas(gcf,'RjADistn')
 saveas(gcf,'RjADistn.eps','epsc')
 saveas(gcf,'RjADistn.png')
 meanRjA=mean(RjA,1,'omitnan');
-min(meanRjA);
-max(meanRjA);
+minRjA=min(meanRjA);
+maxRjA=max(meanRjA);
 
 %% Plot effective reproduction numbers against onset-to-recovery time
 figure;
@@ -403,10 +403,10 @@ saveas(gcf,'RjPVL.png')
 %% Plot median effective reproduction number over time
 figure;
 t=startyr+(maxIP:tmax-1)/12;
-hf2(4)=PlotMCTAndCI(t,median(Rt,1),[quantile(Rt,0.025,1);quantile(Rt,0.975,1)],[0.5 0.5 0.5],0.2,'Time','');
+hf2(4)=PlotMCTAndCI(t,median(Rt,1),[quantile(Rt,0.025,1);quantile(Rt,0.975,1)],[0.5 0.5 0.5],0.2,'Year','');
 for i=1:3
     hold on;
-    hf2(i)=PlotMCTAndCI(t,median(Rts(i,:,:),3),[quantile(Rts(i,:,:),0.025,3);quantile(Rts(i,:,:),0.975,3)],clrs(i,:),0.2,'Time','$$R(t)$$');
+    hf2(i)=PlotMCTAndCI(t,median(Rts(i,:,:),3),[quantile(Rts(i,:,:),0.025,3);quantile(Rts(i,:,:),0.975,3)],clrs(i,:),0.2,'Year','$$R_e(t)$$');
 end
 legend(hf2,{'Asx','VL','PKDL','All'})
 saveas(gcf,'Rt')
@@ -415,10 +415,10 @@ saveas(gcf,'Rt.png')
 
 %% Plot median "effective reproduction number" for new infections leading to VL
 figure;
-hf3(4)=PlotMCTAndCI(t,median(Rt_I,1),[quantile(Rt_I,0.025,1);quantile(Rt_I,0.975,1)],[0.5 0.5 0.5],0.2,'Time','');
+hf3(4)=PlotMCTAndCI(t,median(Rt_I,1),[quantile(Rt_I,0.025,1);quantile(Rt_I,0.975,1)],[0.5 0.5 0.5],0.2,'Year','');
 for i=1:3
     hold on;
-    hf3(i)=PlotMCTAndCI(t,median(Rts_I(i,:,:),3),[quantile(Rts_I(i,:,:),0.025,3);quantile(Rts_I(i,:,:),0.975,3)],clrs(i,:),0.2,'Time','$$R^{VL}(t)$$');
+    hf3(i)=PlotMCTAndCI(t,median(Rts_I(i,:,:),3),[quantile(Rts_I(i,:,:),0.025,3);quantile(Rts_I(i,:,:),0.975,3)],clrs(i,:),0.2,'Year','$$R^{VL}(t)$$');
 end
 legend(hf3,{'Asx','VL','PKDL','All'})
 saveas(gcf,'RtVL')
@@ -512,6 +512,14 @@ saveas(gcf,'ti_I.png')
 %% Plot average distance and time to infectees for VL and PKDL infectors
 srcidx=[4,6];
 [meandists,meantimes]=RunPlotDistsAndTimes(infctr,src,dists,times,srcidx,clrs(2:3,:),'MeanInfctrToInfcteeDists','MeanInfctrOnsetToInfcteeInfctnTimes');
+quantile(meandists{1},[0.25 0.5 0.75])
+quantile(meandists{2},[0.25 0.5 0.75])
+quantile(meantimes{1},[0.25 0.5 0.75])
+quantile(meantimes{2},[0.25 0.5 0.75])
+% Numbers for abstract
+quantile([meandists{1};meandists{2}],0.845)
+quantile(meantimes{1},0.88)
+quantile(meantimes{2},1)/12
 % Plot average distance and time to infectees for most likely VL and PKDL
 % infectors
 [meandistsmax,meantimesmax]=RunPlotDistsAndTimes(infctrmax,srcmax,distsmax,timesmax,srcidx,clrs(2:3,:),'MeanInfctrToInfcteeDistsMostLikelyInfctrs','MeanInfctrOnsetToInfcteeInfctnTimesMostLikelyInfctrs');

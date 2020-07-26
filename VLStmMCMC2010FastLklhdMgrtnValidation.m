@@ -1,4 +1,4 @@
-function VLStmMCMC2010FastLklhdMgrtnValidation(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,delta0,lambda0,h0,h1,h2,h3,hmssng,h40,pI0,typ,niters,plotOutpt,rslts,para,simdata,Stat0,hv,nEmoves,nAmoves)
+function VLStmMCMC2010FastLklhdMgrtnValidation(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,delta0,lambda0,h0,h1,h2,h3,hmssng,h40,pI0,typ,niters,plotOutpt,rslts,para,simdata,Status0,hv,nEmoves,nAmoves)
 
 %% Set default input parameters if no inputs are supplied
 if nargin==0
@@ -29,15 +29,15 @@ if nargin==0
     pI0=0.15; % proportion of infections that lead to VL
     hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases
     typ='Exp'; % type of transmission kernel
-    niters=1e1; % no. of MCMC iterations
+    niters=1e5; % no. of MCMC iterations
     plotOutpt=true; % plot output (true) or not (false)
     rslts='MCMC_NBIP_PKDL_ASX_VALIDATION.mat'; % name of results file for output
-    para=1; % paras to include in the data
-    simdata=readtable('sim_output_para1_1.csv','ReadVariableNames',true); % simulated data for para 1
-    Stat0=csvread('init_stat_para1_1.csv'); % initial statuses of individuals from simulated data
-    hv=csvread('PKDL_infctsnss_para1_1.csv'); % infectiousness of PKDL cases from simulated data
+    para=1:4; % paras to include in the data
+    simdata=readtable('sim_output_Paras1to4_1.csv','ReadVariableNames',true); % simulated data for para 1
+    Status0=csvread('init_status_Paras1to4_1.csv'); % initial statuses of individuals from simulated data
+    hv=csvread('PKDL_infctsnss_Paras1to4_1.csv'); % infectiousness of PKDL cases from simulated data
     nEmoves=round(sum(simdata.tI<108 & simdata.tR<=108)/5); % number of pre-symptomatic infection time updates per iteration
-    nAmoves=round(sum(simdata.tA<108)/5); % number of asymptomatic infection time updates per iteration
+    nAmoves=round(sum(simdata.tA>0 & simdata.tA<=108)/5); % number of asymptomatic infection time updates per iteration
 end
  
 %% LOAD DATA 
@@ -88,8 +88,8 @@ EXTIMsoonI=false(n,1); %(K02_10&data.EXTMIG_IN==1&data.KA>=data.MIG_IN&data.KA-d
 IpreINTIM=false(n,1); %(data.KA<=data.MIG_IN&INTMIG_IN&~prevK); % KA onset before or at internal migration in
 PpreINTIM=false(n,1); %(data.PKDL<=data.MIG_IN&INTMIG_IN); % PKDL onset before or at internal migration in
 PpreEXTIM=false(n,1); %(isnan(data.KA)&data.PKDL<=data.MIG_IN&data.EXTMIG_IN==1); % PKDL onset (without prior KA) before or at external migration in
-% RXF=(data.ALLRXFAIL==1&(data.MOS_RX_NEW_SX==0|(data.PKDL-data.KARX==1))&~KothrObs); % KA cases who suffered treatment failure (include CHMP78102 who had PKDL onset 1 month after KA treatment)
-% REL=(data.ALLRXFAIL==1&~(data.MOS_RX_NEW_SX==0|(data.PKDL-data.KARX==1))&~KothrObs&~(data.KARX+data.MOS_RX_NEW_SX>data.MIG_OUT)); % KA cases who suffered relapse (exclude PJNA58204 who suffered relapse after migrating out of study area)
+RXF=false(n,1); %(data.ALLRXFAIL==1&(data.MOS_RX_NEW_SX==0|(data.PKDL-data.KARX==1))&~KothrObs); % KA cases who suffered treatment failure (include CHMP78102 who had PKDL onset 1 month after KA treatment)
+REL=false(n,1); %(data.ALLRXFAIL==1&~(data.MOS_RX_NEW_SX==0|(data.PKDL-data.KARX==1))&~KothrObs&~(data.KARX+data.MOS_RX_NEW_SX>data.MIG_OUT)); % KA cases who suffered relapse (exclude PJNA58204 who suffered relapse after migrating out of study area)
 % RXP=(data.RXD_PKDL==1); % PKDL cases who were treated
 
 % Make event time vectors
@@ -97,9 +97,9 @@ PpreEXTIM=false(n,1); %(isnan(data.KA)&data.PKDL<=data.MIG_IN&data.EXTMIG_IN==1)
 % tR=data.KARX+durRX-origin; % KA recovery
 % % Add 1 month of infectiousness for treatment failure KA cases
 % tR(RXF)=tR(RXF)+1;
-% tRL=data.KARX+data.MOS_RX_NEW_SX-origin; % KA relapse
-% tRL(RXF)=NaN; % overwrite "relapse" times for treatment failures
-% tRLR=NaN(n,1); % relapse recovery
+tRL=NaN(n,1); %data.KARX+data.MOS_RX_NEW_SX-origin; % KA relapse
+tRL(RXF)=NaN; % overwrite "relapse" times for treatment failures
+tRLR=NaN(n,1); % relapse recovery
 % tP=data.PKDL-origin; % PKDL onset
 % tRP=data.PKDL+data.PKDL_DUR-origin; % PKDL recovery
 % % Overwrite resolution times with treatment times for treated PKDL cases.
@@ -109,25 +109,33 @@ tD=data.DEATH-origin; % death
 tIM=data.MIG_IN-origin; % immigration
 tEM=data.MIG_OUT-origin; % emigration
 
+% Create index vectors for 1st and 2nd observations of internal migrators 
+% (complicated definition to allow for subsetting of the data and to ensure
+% 1st and 2nd obs are matched in IM_OUT and IM_IN)
+IM_OUT=find(ismember(data.RESP_ID,data.ORIG_ID(INTMIG_IN))&INTMIG_OUT); % observation in 1st HH
+IM_IN=find(ismember(data.ORIG_ID,data.RESP_ID(INTMIG_OUT))&INTMIG_IN); % observation in 2nd HH
+
 KothrObs=((simdata.tI>=tEM & ~isinf(simdata.tI) & INTMIG_OUT)|(simdata.tI<tIM & INTMIG_IN)); % observations for KA cases who internally migrated in which they did not have KA onset
+KothrObs(IM_OUT(ismember(IM_IN,find(~isinf(simdata.tI))) & isinf(simdata.tI(IM_OUT))))=true;
 PothrObs=((simdata.tP>=tEM & ~isinf(simdata.tP) & INTMIG_OUT)|(simdata.tP<tIM & INTMIG_IN)); % observations of PKDL cases who internally migrated in which they did not have PKDL onset 
-K02_10=(simdata.tI<tmax & simdata.tR<=tmax & ~KothrObs); % KA with onset during study (between start and end times)
+PothrObs(IM_OUT(ismember(IM_IN,find(~isinf(simdata.tP))) & isinf(simdata.tP(IM_OUT))))=true;
+K02_10=(simdata.tI<tmax & (simdata.tR<=tmax | simdata.tDor<=tmax) & ~KothrObs); % KA with onset during study (between start and end times)
 
 % Make index vectors for different groups of individuals
 I=find(K02_10); % KA cases with onset between start month and end month
-% RLO=find(REL&~isnan(tRL)); % KA relapse cases with relapse times
-% RLNO=find(REL&isnan(tRL)); % KA relapse cases with missing relapse time
-% RL=[RLO;RLNO];
+RLO=find(REL&~isnan(tRL)); % KA relapse cases with relapse times
+RLNO=find(REL&isnan(tRL)); % KA relapse cases with missing relapse time
+RL=[RLO;RLNO];
 P=find(simdata.tP<=tmax & ~PothrObs); % PKDL cases
-postP=find(simdata.tP>tmax & ~isinf(simdata.tP));
+postP=find(simdata.tDor<=tmax & simdata.tP>tmax & ~isinf(simdata.tP));
 IandP=sort(intersect(I,P)); % KA cases who developed PKDL
 
 tI=NaN(n,1);
 tI(I)=simdata.tI(I);
 tR=NaN(n,1);
 tR(setdiff(I,P))=simdata.tR(setdiff(I,P));
-tR(IandP)=simdata.tDor(IandP);
-% Overwrite treatment time for case with PKDL onset after tmax as PKDL 
+tR([IandP;find(K02_10 & PothrObs)])=simdata.tDor([IandP;find(K02_10 & PothrObs)]);
+% Overwrite treatment time for cases with PKDL onset after tmax as PKDL 
 % onsets after tmax are censored
 tR(postP)=simdata.tDor(postP);
 tI(actvK)=0;
@@ -154,11 +162,6 @@ IM=find(~isnan(tIM)); % individuals who migrated into a household (HH) in the st
 EM=find(~isnan(tEM)); % individuals who migrated out of a HH in the study area
 IMI=find(KothrObs&tI<tIM&tR>tIM); % active KA cases who internally migrated before being treated
 IMP=find(PothrObs&tP<tIM&tRP>tIM|PpreEXTIM); % active PKDL cases who internally migrated before being treated
-% Create index vectors for 1st and 2nd observations of internal migrators 
-% (complicated definition to allow for subsetting of the data and to ensure
-% 1st and 2nd obs are matched in IM_OUT and IM_IN)
-IM_OUT=find(ismember(data.RESP_ID,data.ORIG_ID(INTMIG_IN))&INTMIG_OUT); % observation in 1st HH
-IM_IN=find(ismember(data.ORIG_ID,data.RESP_ID(INTMIG_OUT))&INTMIG_IN); % observation in 2nd HH
 % KA cases who (potentially) initially had active KA
 AOR=find(actvK&~isnan(tI)&~isnan(tR)); % cases with active KA
 AONR=find(actvK&~isnan(tI)&isnan(tR)); % cases with KA onset before start of study but missing recovery time
@@ -173,9 +176,9 @@ nNONR=numel(NONR); % KA cases w/o onset or treatment times
 nONR=numel(ONR); % KA cases w/ onset time but no treatment time
 nRNO=numel(RNO); % KA cases w/ treatment time but no onset time
 nNO=numel(NO); % KA cases w/ no onset time
-% nRL=numel(RL); % KA relapse cases
-% nRLO=numel(RLO); % KA relapse cases w/ relapse time
-% nRLNO=numel(RLNO); % KA relapse cases w/o relapse time
+nRL=numel(RL); % KA relapse cases
+nRLO=numel(RLO); % KA relapse cases w/ relapse time
+nRLNO=numel(RLNO); % KA relapse cases w/o relapse time
 nIandP=numel(IandP); % KA cases w/ onset between startyr and endyr and later PKDL
 nIMI=numel(IMI); % internal immigrants with KA at time of migration
 nIMP=numel(IMP); % internal immigrants with PKDL at time of migration
@@ -270,12 +273,11 @@ else % if nEmoves~=0
     % Draw infection times from negative binomial distribution with parameters
     % r1 and p1
     tE=NaN(n,1); % initialise infection time vector
-    tE(I)=-Inf; % set infection times so that they will all be updated below
     for i=1:nI
         % loop until infection time is not before month after birth and cases 
         % with onset after initial window have infection times after first month
         j=I(i);
-        while tE(j)<tB(j)+1 || (tI(j)>maxIP && tE(j)<1) || (tI(j)-tIM(j)-1>maxIP_IM && tE(j)<tIM(j)+1) % individuals can't be infected until month after birth/immigration
+        while isnan(tE(j)) || tE(j)<tB(j)+1 || (tI(j)>maxIP && tE(j)<1) || (tI(j)-tIM(j)-1>maxIP_IM && tE(j)<tIM(j)+1) % individuals can't be infected until month after birth/immigration
             tE(j)=tI(j)-(nbinrnd(r1,p10)+1);
         end
     end     
@@ -369,8 +371,8 @@ rng=[max(max(tB,tIM)+1,0) min(min(tEM,tD),tmax+1)];
 
 if nAmoves==0
     Asx=find(simdata.tA<=tmax);
-    actvA=find(Stat0==2);
-    prevA=find(Stat0==7 & ~prevK);
+    actvA=find(Status0==2);
+    prevA=find(Status0==7 & ~prevK);
     tA=NaN(n,1);
     tA(Asx)=simdata.tA(Asx);
     tRA=NaN(n,1);
@@ -798,9 +800,9 @@ tRsONR=zeros(nONR,niters); % treatment times of KA cases missing only treatment 
 tIsANONR=zeros(nANONR,niters); % onset times of potentially initially active KA cases missing onset and treatment times
 tRsANONR=zeros(nANONR,niters); % treatment onset times of potentially initially active KA cases missing onset and treatment times
 tRsAONR=zeros(nAONR,niters); % recovery times of potentially initially active KA cases missing only treatment time
-% tRLRsRLO=zeros(nRLO,niters); % relapse treatment times for KA relapse cases with observed relapse time
-% tRLsRLNO=zeros(nRLNO,niters); % relapse times for KA relapse cases with missing relapse times
-% tRLRsRLNO=zeros(nRLNO,niters); % relase treatment times for KA relapse cases with missing relapse times
+tRLRsRLO=zeros(nRLO,niters); % relapse treatment times for KA relapse cases with observed relapse time
+tRLsRLNO=zeros(nRLNO,niters); % relapse times for KA relapse cases with missing relapse times
+tRLRsRLNO=zeros(nRLNO,niters); % relase treatment times for KA relapse cases with missing relapse times
  
 % Initialise new parameter values, transmission rate matrices, event time vectors and infectiousness matrices
 pnew=pold;
@@ -817,8 +819,8 @@ tAnew=tA;
 tRAnew=tRA;
 tInew=tI;
 tRnew=tR;
-% tRLnew=tRL;
-% tRLRnew=tRLR;
+tRLnew=tRL;
+tRLRnew=tRLR;
 tEmnew=tEm;
 tAmnew=tAm;
 Snew=S; 
@@ -889,10 +891,10 @@ acc_rate_AR=0;
 acc_PA=0;
 rej_PA=0;
 acc_rate_PA=0;
-% % Relapse cases with missing relapse and relapse treatment time
-% acc_RLNO=0;
-% rej_RLNO=0;
-% acc_rate_RLNO=0;
+% Relapse cases with missing relapse and relapse treatment time
+acc_RLNO=0;
+rej_RLNO=0;
+acc_rate_RLNO=0;
 % Relapse cases with missing treatment time
 acc_RLO=0;
 rej_RLO=0;
@@ -1716,386 +1718,386 @@ for k=1:niters
     end
 
     %% UPDATE MISSING KA ONSET TIMES
-%     for i=1:nNO
-%         j=NO(i); % get index of KA case without onset time
-%         tInew(j)=tR(j)-(nbinrnd(r0,p0)+1); % draw new onset time by drawing new onset-to-treatment time and subtracting it from the treatment time
-%         
-%         if tInew(j)>tE(j) && tInew(j)>=tIlb(j) && tInew(j)<=tIub(j) % calculate log-likelihood if new onset time is after infection time, within infection time bounds, and before death
-%             tIj=tI(j);
-%             tIjnew=tInew(j);
-%             IPnew(j)=tIjnew-tE(j); % new incubation period
-%             m=(IPNIA==j); % get index of case in infectiousness matrix
-%             hnew(m,tIj+1:tIjnew)=h0; % reduce infectiousness up to new onset time if it is later
-%             hnew(m,tIjnew+1:tIj)=1; % increase infectiousness from new onset time if it is earlier
-%             erlrI=min(tIj,tIjnew); % index of column for earlier onset time between old and new onset time
-%             ltrI=max(tIj,tIjnew); % index of column for later onset time between old and new onset time
-%             
-%             % Calculate new infection pressure
-%             idx=erlrI+1:ltrI; % index of columns to change
-%             lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%             lambda_new(:,idx)=lambdaHH_new(ib,idx); % infection pressure on each individual
-% 
-%             % Calculate new log-likelihood terms
-%             LL1new=L1(S,lambda_new);
-%             LL2new=L2(lambda_new,pold(7),tEm);
-%             LL3new=L3(IPnew(I),r1,p1new);
-%             LL4new=L4(lambda_new,pold(7),tAm);
-%             LLnew=LL1new+LL2new+LL3new+LL4new;
-%             LLold=LL1old+LL2old+LL3old+LL4old;
-%             
-%             % Calculate Metropolis-Hastings acceptance probability
-%             log_ap=LLnew-LLold;
-%             
-%             if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                 IPold(j)=IPnew(j); tI(j)=tInew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
-%                 LL1old=LL1new; LL2old=LL2new; LL3old=LL3new; 
-%                 LL4old=LL4new; % keep updated info
-%                 acc_I=acc_I+1;
-%             else % else reject and keep new values
-%                 IPnew(j)=IPold(j); tInew(j)=tI(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                 rej_I=rej_I+1;
-%             end
-%         else % otherwise reject immediately
-%             tInew(j)=tI(j);
-%             rej_I=rej_I+1;
-%         end
-%     end
-%  
-%     %% MOVE WHOLE INFECTION-TO-TREATMENT PERIOD OF CASES MISSING ONSET AND TREATMENT TIMES
-%     for i=1:nNONR
-%         j=NONR(i); % get index of KA case without onset or treatment times
-%         tmp1=0;
-%         while tmp1==0
-%             tmp1=round(sqrt(ERvar)*randn);
-%         end
-%         tEnew(j)=tE(j)+tmp1;
-%         tInew(j)=tI(j)+tmp1;
-%         tRnew(j)=tR(j)+tmp1;
-%         
-%         % if KA onset and PKDL onset/death in same year and maximum symptom 
-%         % period currently chosen, or infection is at start of study/birth 
-%         % time and onset/recovery time are as late as they can be, reject 
-%         % immediately as infection-to-treatment period cannot be moved. N.B.
-%         % there is 1 KA case with simultaneous PKDL so PKDL onset can
-%         % happen before KA treatment, but we assume this is not the case in 
-%         % general, so enforce that PKDL onset occurs after KA onset
-%         if ~(tI(j)==tIlb(j) && tR(j)==min(min(tP(j)-1,tD(j)),tmax)) && ~(tE(j)==tB(j)+1 && (tI(j)==tIub(j) || tR(j)==min(min(tP(j)-1,tD(j)),tmax))) && tInew(j)>=tIlb(j) && tInew(j)<=tIub(j) && tEnew(j)>=tB(j)+1 && ~(tInew(j)>maxIP && tEnew(j)<1) && tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % DO I NEED TO WORRY ABOUT EMIGRATION HERE?
-%             tEj=tE(j);
-%             tEjnew=tEnew(j);
-%             tIj=tI(j);
-%             tIjnew=tInew(j);
-%             tRj=tR(j);
-%             tRjnew=tRnew(j);   
-%             
-%             % calculate log-likelihood if an infection-treatment block move 
-%             % is possible; allow treatment month to be same as death month 
-%             % as cases were said to have died during treatment
-%             if tIj>maxIP && tIjnew>maxIP % only update infection time and susceptibility matrices for cases with onset after initial window and after entry
-%                 tEmnew(j,tEj)=0; % remove old infection time
-%                 tEmnew(j,tEjnew)=1; % add new infection time
-%                 Snew(j,tEjnew:tEj-1)=0; % remove old susceptible times if new infection time is earlier (from month individual is infected up to but not incl. month before old infection time)
-%                 Snew(j,tEj:tEjnew-1)=1; % add new susceptible times if new infection time is later (up to but not incl. month individual is infected)
-%             elseif tIj>maxIP && tIjnew<=maxIP % if old onset time is after incubation period window and new one is within it
-%                 tEmnew(j,tEj)=0; % remove infection time from infection time matrix
-%                 Snew(j,:)=0; % remove susceptibility for case
-%             elseif tIj<=maxIP && tIjnew>maxIP % if old onset time was within incubation period window and new one is after it
-%                 tEmnew(j,tEjnew)=1; % add new infection time to infection time matrix
-%                 Snew(j,1:tEjnew-1)=1; % add susceptibility up to new infection time
-%             end
-%                      
-%             m=(IPNIA==j); % get index of case in infectiousness matrix
-%             hnew(m,max(0,tEj)+1:tIj)=0; % remove old presymptomatic infectiousness
-%             hnew(m,tIj+1:tRj)=0; % remove old symptomatic infectiousness
-%             hnew(m,max(0,tEjnew)+1:tIjnew)=h0; % add new presymptomatic infectiousness
-%             hnew(m,tIjnew+1:tRjnew)=1; % add new symptomatic infectiousness
-%   
-%             erlrE=max(0,min(tEj,tEjnew)); % index of column for earlier infection time between old and new infection time
-%             ltrE=max(0,max(tEj,tEjnew)); % index of column for later infection time between old and new infection time
-%             erlrI=min(tIj,tIjnew); % index of column for earlier onset time between old and new onset time
-%             ltrI=max(tIj,tIjnew); % index of column for later onset time between old and new onset time
-%             erlrR=min(tRj,tRjnew); % index of column for earlier treatment time between old and new treatment time
-%             ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
-%             
-%             % Calculate new infection pressure
-%             idx=[erlrE+1:ltrE,erlrI+1:ltrI,erlrR+1:ltrR]; % index of columns to change
-%             lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%             lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%             
-%             % Calculate new log-likelihood terms
-%             LL1new=L1(Snew,lambda_new);
-%             LL2new=L2(lambda_new,pold(7),tEmnew);
-%             LL4new=L4(lambda_new,pold(7),tAm);
-%             LLnew=LL1new+LL2new+LL4new;
-%             LLold=LL1old+LL2old+LL4old;
-%             
-%             % Calculate Metropolis-Hastings acceptance probability
-%             log_ap=LLnew-LLold;
-%             
-%             if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                 tE(j)=tEnew(j); S(j,:)=Snew(j,:); tEm(j,:)=tEmnew(j,:); tI(j)=tInew(j); tR(j)=tRnew(j);
-%                 h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
-%                 LL1old=LL1new; LL2old=LL2new; 
-%                 LL4old=LL4new; % keep updated info
-%                 acc_ERmove=acc_ERmove+1;
-%             else % else reject and keep old values
-%                 tEnew(j)=tE(j); Snew(j,:)=S(j,:); tEmnew(j,:)=tEm(j,:); tInew(j)=tI(j); tRnew(j)=tR(j);
-%                 hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                 rej_ERmove=rej_ERmove+1;
-%             end
-%         else % otherwise reject immediately
-%             tEnew(j)=tE(j); tInew(j)=tI(j); tRnew(j)=tR(j);
-%             rej_ERmove=rej_ERmove+1;
-%         end
-%     end
-%     
-%     %% UPDATE MISSING KA TREATMENT TIMES
-%     for i=1:nONR
-%         j=ONR(i); % get index of case without treatment time
-%         tRnew(j)=tI(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment time and adding it to onset time
-%               
-%         if tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % calculate log-likelihood if new recovery time is before PKDL onset/death/end of study
-%             tRj=tR(j);
-%             tRjnew=tRnew(j);
-%             m=(IPNIA==j); % get infex of case in infectiousness matrix
-%             hnew(m,tRj+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
-%             hnew(m,tRjnew+1:tRj)=0; % remove infectiousness from new treatment time if it is earlier
-%             erlrR=min(tRj,tRjnew); % index of column for earlier treatment time between old and new treatment time
-%             ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
-%             
-%             % Calculate new infection pressure
-%             idx=erlrR+1:ltrR; % index of columns to change
-%             lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%             lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%             
-%             % Calculate new log-likelihood terms
-%             LL1new=L1(S,lambda_new);
-%             LL2new=L2(lambda_new,pold(7),tEm);
-%             LL4new=L4(lambda_new,pold(7),tAm);
-%             LLnew=LL1new+LL2new+LL4new;
-%             LLold=LL1old+LL2old+LL4old;
-%             
-%             % Calculate Metropolis-Hastings acceptance value
-%             log_ap=LLnew-LLold;
-%             
-%             if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                 tR(j)=tRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
-%                 LL1old=LL1new; LL2old=LL2new; 
-%                 LL4old=LL4new; % keep updated info
-%                 acc_R=acc_R+1;
-%             else % else reject and keep old values
-%                 tRnew(j)=tR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); % keep old values, don't change log-likelihood
-%                 rej_R=rej_R+1;
-%             end
-%         else % otherwise reject immediately
-%             tRnew(j)=tR(j);
-%             rej_R=rej_R+1;
-%         end
-%     end
-%     
-%     %% MOVE WHOLE ONSET-TO-TREATMENT PERIOD OF CASES WITH ACTIVE KA AT START OF STUDY MISSING ONSET AND TREATMENT TIMES
-%     for i=1:nANONR
-%         j=ANONR(i); % get index of potentially initially active KA case
-%         tmp2=0; % onset-to-treatment period shift
-%         while tmp2==0 % resample until a non-zero value is obtained
-%             tmp2=round(sqrt(ERvar)*randn);
-%         end
-%         tInew(j)=tI(j)+tmp2; % new onset time
-%         tRnew(j)=tInew(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment period and adding it to new onset time
-%             
-%         % if KA onset and PKDL onset/death in same year and maximum symptom 
-%         % period currently chosen, reject immediately as 
-%         % infection-to-treatment period cannot be moved
-%         if ~(tI(j)==tIlbA(j) && tR(j)==min(min(tP(j)-1,tD(j)),tmax)) && tInew(j)>=tIlbA(j) && tInew(j)<=tIubA(j) && tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax)
-%             % calculate log-likelihood if an infection-treatment block move 
-%             % is possible; allow treatment month to be same as death month 
-%             % as cases were said to have died during treatment                       
-%             tRj=tR(j);
-%             tRjnew=tRnew(j);
-%             
-%             if tRj>0 || tRjnew>0 % update likelihood if old or new recovery time is after start month
-%                 m=(IPNIA==j); % get index of case in infectiousness matrix
-%                 hnew(m,max(0,tRj)+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
-%                 hnew(m,max(0,tRjnew)+1:tRj)=0; % remove infectiousness from new treatment time if it is later
-%                 erlrR=max(0,min(tRj,tRjnew)); % index of column for earlier treatment time between old and new treatment time
-%                 ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
-%                 
-%                 % Calculate new infection pressure
-%                 idx=erlrR+1:ltrR; % index of columns to change
-%                 lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%                 lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%                 
-%                 % Calculate new log-likelihood terms
-%                 LL1new=L1(S,lambda_new);
-%                 LL2new=L2(lambda_new,pold(7),tEm);
-%                 LL4new=L4(lambda_new,pold(7),tAm);
-%                 LLnew=LL1new+LL2new+LL4new;
-%                 LLold=LL1old+LL2old+LL4old;
-%                 
-%                 % Calculate Metropolis-Hastings acceptance probability
-%                 log_ap=LLnew-LLold;
-%                 
-%                 if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                     tI(j)=tInew(j); tR(j)=tRnew(j);
-%                     h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); 
-%                     LL1old=LL1new; LL2old=LL2new; 
-%                     LL4old=LL4new; % keep updated info
-%                     acc_AIRmove=acc_AIRmove+1;
-%                 else % else reject and keep old values
-%                     tInew(j)=tI(j); tRnew(j)=tR(j);
-%                     hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                     rej_AIRmove=rej_AIRmove+1;
-%                 end
-%             else % if both old and new recovery times are in/before start month then likelihood does not change so always accept
-%                 tI(j)=tInew(j); tR(j)=tRnew(j);
-%                 acc_AIRmove=acc_AIRmove+1;
-%             end
-%         else
-%             tInew(j)=tI(j); tRnew(j)=tR(j);
-%             rej_AIRmove=rej_AIRmove+1;
-%         end
-%     end
-% 
-%     %% UPDATE MISSING TREATMENT TIMES OF CASES WITH ACTIVE KA AT START OF STUDY
-%     for i=1:nAONR
-%         j=AONR(i); % get index of potentially initially active KA case
-%         tRnew(j)=tI(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment time and adding it to onset time
-%         
-%         if tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % calculate log-likelihood if new recovery time is before PKDL onset/death/end of study
-%             tRj=tR(j);
-%             tRjnew=tRnew(j);           
-%             if tRj>0 || tRjnew>0 % calculate log-likelihood if old or new recovery time is after start month
-%                 m=(IPNIA==j); % get index of case in infectiousness matrix
-%                 hnew(m,max(0,tRj)+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
-%                 hnew(m,max(0,tRjnew)+1:tRj)=0; % remove infectiousness from new treatment time if it is earlier
-%                 erlrR=max(0,min(tRj,tRjnew)); % index of column for earlier treatment time between old and new treatment time
-%                 ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
-%                 
-%                 % Calculate new infection pressure
-%                 idx=erlrR+1:ltrR; % index of columns to change
-%                 lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%                 lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%                 
-%                 % Calculate new log-likelihood terms
-%                 LL1new=L1(S,lambda_new);
-%                 LL2new=L2(lambda_new,pold(7),tEm);
-%                 LL4new=L4(lambda_new,pold(7),tAm);
-%                 LLnew=LL1new+LL2new+LL4new;
-%                 LLold=LL1old+LL2old+LL4old;                
-%                 
-%                 % Calculate Metropolis-Hastings acceptance value
-%                 log_ap=LLnew-LLold;
-%                 
-%                 if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                     tR(j)=tRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); 
-%                     LL1old=LL1new; LL2old=LL2new;
-%                     LL4old=LL4new; % keep updated info
-%                     acc_AR=acc_AR+1;
-%                 else % else reject and keep old values
-%                     tRnew(j)=tR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                     rej_AR=rej_AR+1;
-%                 end
-%             else % if both old and new recovery times are in/before start month then likelihood does not change so always accept
-%                 tR(j)=tRnew(j);
-%                 acc_AR=acc_AR+1;
-%             end
-%         else % otherwise reject immediately
-%             tRnew(j)=tR(j);
-%             rej_AR=rej_AR+1;
-%         end
-%     end
-%     
-%     %% MOVE WHOLE RELAPSE PERIOD OF RELAPSE CASES MISSING RELAPSE AND RELAPSE TREATMENT TIMES
-%     for i=1:nRLNO
-%        j=RLNO(i); % get index of relapse case without relapse or relapse treatment times
-%        tRLnew(j)=tR(j)+geornd(p4)+1; % draw new relapse time by drawing new treatment-to-relapse time and adding it to treatment time
-%        tRLRnew(j)=tRLnew(j)+nbinrnd(r0,p0)+1; % draw new relapse treatment time by drawing time from KA onset-to-treatment time distribution and adding it to relapse time 
-%        
-%        if tRLnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-2,tmax) && tRLRnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-1,tmax)
-%            tRLj=tRL(j);
-%            tRLjnew=tRLnew(j);
-%            tRLRj=tRLR(j);
-%            tRLRjnew=tRLRnew(j);
-%            m=(IPNIA==j); % get index of case in infectiousness matrix
-%            hnew(m,tRLj+1:tRLRj)=0; % remove old infectiousness
-%            hnew(m,tRLjnew+1:tRLRjnew)=1; % add new infectiousness
-%            erlrRL=min(tRLj,tRLjnew); % index of column for earlier relapse time between old and new relapse time
-%            ltrRL=max(tRLj,tRLjnew); % index of column for later relapse time between old and new relapse time
-%            erlrRLR=min(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
-%            ltrRLR=max(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
-%            
-%            % Calculate new infection pressure
-%            idx=[erlrRL+1:ltrRL,erlrRLR+1:ltrRLR]; % index of columns to change
-%            lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%            lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%            
-%            % Calculate new log-likelihood terms
-%            LL1new=L1(S,lambda_new);
-%            LL2new=L2(lambda_new,pold(7),tEm);
-%            LL4new=L4(lambda_new,pold(7),tAm);
-%            LLnew=LL1new+LL2new+LL4new;
-%            LLold=LL1old+LL2old+LL4old;
-%            
-%            % Calculate Metropolis-Hastings acceptance probability
-%            log_ap=LLnew-LLold;
-%            
-%            if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                tRL(j)=tRLnew(j); tRLR(j)=tRLRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
-%                LL1old=LL1new; LL2old=LL2new;
-%                LL4old=LL4new; % keep updated info
-%                acc_RLNO=acc_RLNO+1;
-%            else % else reject and keep old values
-%                tRLnew(j)=tRL(j); tRLRnew(j)=tRLR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                rej_RLNO=rej_RLNO+1;
-%            end
-%        else % otherwise reject immediately
-%            tRLnew(j)=tRL(j); tRLRnew(j)=tRLR(j);
-%            rej_RLNO=rej_RLNO+1;
-%        end
-%     end
-%     
-%     %% UPDATE MISSING RELAPSE TREATMENT TIMES
-%     for i=1:nRLO
-%        j=RLO(i); % get index of relapse case missing just relapse treatment time
-%        tRLRnew(j)=tRL(j)+nbinrnd(r0,p0)+1; % draw new relapse treatment time by drawing KA onset-to-treatment time and adding it to relapse time
-%        
-%        if tRLRnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-1,tmax) % calculate log-likelihood if new relapse treatment time is before emigration/PKDL onset/death/end of study
-%            tRLRj=tRLR(j);
-%            tRLRjnew=tRLRnew(j);
-%            m=(IPNIA==j); % index of case in infectiousness matrix
-%            hnew(m,tRLRj+1:tRLRjnew)=1; % add infectiousness if new relapse treatment time is later
-%            hnew(m,tRLRjnew+1:tRLRj)=0; % remove infectiousness if new relapse treatment time is earlier
-%            erlrRLR=min(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
-%            ltrRLR=max(tRLRj,tRLRjnew); % index of column for later relapse treatment time between old and new relapse treatment time
-%            
-%            % Calculate new infection pressure
-%            idx=erlrRLR+1:ltrRLR; % index of columns to change
-%            lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
-%            lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
-%            
-%            % Calculate new log-likelihood terms
-%            LL1new=L1(S,lambda_new);
-%            LL2new=L2(lambda_new,pold(7),tEm);
-%            LL4new=L4(lambda_new,pold(7),tAm);
-%            LLnew=LL1new+LL2new+LL4new;
-%            LLold=LL1old+LL2old+LL4old;
-%            
-%            % Calculate Metropolis-Hastings acceptance probability
-%            log_ap=LLnew-LLold;
-%            
-%            if log_ap > log(rand) % accept new values if acceptance probability > rand
-%                tRLR(j)=tRLRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
-%                LL1old=LL1new; LL2old=LL2new;
-%                LL4old=LL4new; % keep updated info
-%                acc_RLO=acc_RLO+1;
-%            else % else reject and keep old values
-%                tRLRnew(j)=tRLR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
-%                rej_RLO=rej_RLO+1;
-%            end
-%        else % otherwise reject immediately
-%            tRLRnew(j)=tRLR(j);
-%            rej_RLO=rej_RLO+1;
-%        end
-%     end
+    for i=1:nNO
+        j=NO(i); % get index of KA case without onset time
+        tInew(j)=tR(j)-(nbinrnd(r0,p0)+1); % draw new onset time by drawing new onset-to-treatment time and subtracting it from the treatment time
+        
+        if tInew(j)>tE(j) && tInew(j)>=tIlb(j) && tInew(j)<=tIub(j) % calculate log-likelihood if new onset time is after infection time, within infection time bounds, and before death
+            tIj=tI(j);
+            tIjnew=tInew(j);
+            IPnew(j)=tIjnew-tE(j); % new incubation period
+            m=(IPNIA==j); % get index of case in infectiousness matrix
+            hnew(m,tIj+1:tIjnew)=h0; % reduce infectiousness up to new onset time if it is later
+            hnew(m,tIjnew+1:tIj)=1; % increase infectiousness from new onset time if it is earlier
+            erlrI=min(tIj,tIjnew); % index of column for earlier onset time between old and new onset time
+            ltrI=max(tIj,tIjnew); % index of column for later onset time between old and new onset time
+            
+            % Calculate new infection pressure
+            idx=erlrI+1:ltrI; % index of columns to change
+            lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+            lambda_new(:,idx)=lambdaHH_new(ib,idx); % infection pressure on each individual
+
+            % Calculate new log-likelihood terms
+            LL1new=L1(S,lambda_new);
+            LL2new=L2(lambda_new,pold(7),tEm);
+            LL3new=L3(IPnew(I),r1,p1new);
+            LL4new=L4(lambda_new,pold(7),tAm);
+            LLnew=LL1new+LL2new+LL3new+LL4new;
+            LLold=LL1old+LL2old+LL3old+LL4old;
+            
+            % Calculate Metropolis-Hastings acceptance probability
+            log_ap=LLnew-LLold;
+            
+            if log_ap > log(rand) % accept new values if acceptance probability > rand
+                IPold(j)=IPnew(j); tI(j)=tInew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
+                LL1old=LL1new; LL2old=LL2new; LL3old=LL3new; 
+                LL4old=LL4new; % keep updated info
+                acc_I=acc_I+1;
+            else % else reject and keep new values
+                IPnew(j)=IPold(j); tInew(j)=tI(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+                rej_I=rej_I+1;
+            end
+        else % otherwise reject immediately
+            tInew(j)=tI(j);
+            rej_I=rej_I+1;
+        end
+    end
+ 
+    %% MOVE WHOLE INFECTION-TO-TREATMENT PERIOD OF CASES MISSING ONSET AND TREATMENT TIMES
+    for i=1:nNONR
+        j=NONR(i); % get index of KA case without onset or treatment times
+        tmp1=0;
+        while tmp1==0
+            tmp1=round(sqrt(ERvar)*randn);
+        end
+        tEnew(j)=tE(j)+tmp1;
+        tInew(j)=tI(j)+tmp1;
+        tRnew(j)=tR(j)+tmp1;
+        
+        % if KA onset and PKDL onset/death in same year and maximum symptom 
+        % period currently chosen, or infection is at start of study/birth 
+        % time and onset/recovery time are as late as they can be, reject 
+        % immediately as infection-to-treatment period cannot be moved. N.B.
+        % there is 1 KA case with simultaneous PKDL so PKDL onset can
+        % happen before KA treatment, but we assume this is not the case in 
+        % general, so enforce that PKDL onset occurs after KA onset
+        if ~(tI(j)==tIlb(j) && tR(j)==min(min(tP(j)-1,tD(j)),tmax)) && ~(tE(j)==tB(j)+1 && (tI(j)==tIub(j) || tR(j)==min(min(tP(j)-1,tD(j)),tmax))) && tInew(j)>=tIlb(j) && tInew(j)<=tIub(j) && tEnew(j)>=tB(j)+1 && ~(tInew(j)>maxIP && tEnew(j)<1) && tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % DO I NEED TO WORRY ABOUT EMIGRATION HERE?
+            tEj=tE(j);
+            tEjnew=tEnew(j);
+            tIj=tI(j);
+            tIjnew=tInew(j);
+            tRj=tR(j);
+            tRjnew=tRnew(j);   
+            
+            % calculate log-likelihood if an infection-treatment block move 
+            % is possible; allow treatment month to be same as death month 
+            % as cases were said to have died during treatment
+            if tIj>maxIP && tIjnew>maxIP % only update infection time and susceptibility matrices for cases with onset after initial window and after entry
+                tEmnew(j,tEj)=0; % remove old infection time
+                tEmnew(j,tEjnew)=1; % add new infection time
+                Snew(j,tEjnew:tEj-1)=0; % remove old susceptible times if new infection time is earlier (from month individual is infected up to but not incl. month before old infection time)
+                Snew(j,tEj:tEjnew-1)=1; % add new susceptible times if new infection time is later (up to but not incl. month individual is infected)
+            elseif tIj>maxIP && tIjnew<=maxIP % if old onset time is after incubation period window and new one is within it
+                tEmnew(j,tEj)=0; % remove infection time from infection time matrix
+                Snew(j,:)=0; % remove susceptibility for case
+            elseif tIj<=maxIP && tIjnew>maxIP % if old onset time was within incubation period window and new one is after it
+                tEmnew(j,tEjnew)=1; % add new infection time to infection time matrix
+                Snew(j,1:tEjnew-1)=1; % add susceptibility up to new infection time
+            end
+                     
+            m=(IPNIA==j); % get index of case in infectiousness matrix
+            hnew(m,max(0,tEj)+1:tIj)=0; % remove old presymptomatic infectiousness
+            hnew(m,tIj+1:tRj)=0; % remove old symptomatic infectiousness
+            hnew(m,max(0,tEjnew)+1:tIjnew)=h0; % add new presymptomatic infectiousness
+            hnew(m,tIjnew+1:tRjnew)=1; % add new symptomatic infectiousness
+  
+            erlrE=max(0,min(tEj,tEjnew)); % index of column for earlier infection time between old and new infection time
+            ltrE=max(0,max(tEj,tEjnew)); % index of column for later infection time between old and new infection time
+            erlrI=min(tIj,tIjnew); % index of column for earlier onset time between old and new onset time
+            ltrI=max(tIj,tIjnew); % index of column for later onset time between old and new onset time
+            erlrR=min(tRj,tRjnew); % index of column for earlier treatment time between old and new treatment time
+            ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
+            
+            % Calculate new infection pressure
+            idx=[erlrE+1:ltrE,erlrI+1:ltrI,erlrR+1:ltrR]; % index of columns to change
+            lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+            lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+            
+            % Calculate new log-likelihood terms
+            LL1new=L1(Snew,lambda_new);
+            LL2new=L2(lambda_new,pold(7),tEmnew);
+            LL4new=L4(lambda_new,pold(7),tAm);
+            LLnew=LL1new+LL2new+LL4new;
+            LLold=LL1old+LL2old+LL4old;
+            
+            % Calculate Metropolis-Hastings acceptance probability
+            log_ap=LLnew-LLold;
+            
+            if log_ap > log(rand) % accept new values if acceptance probability > rand
+                tE(j)=tEnew(j); S(j,:)=Snew(j,:); tEm(j,:)=tEmnew(j,:); tI(j)=tInew(j); tR(j)=tRnew(j);
+                h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
+                LL1old=LL1new; LL2old=LL2new; 
+                LL4old=LL4new; % keep updated info
+                acc_ERmove=acc_ERmove+1;
+            else % else reject and keep old values
+                tEnew(j)=tE(j); Snew(j,:)=S(j,:); tEmnew(j,:)=tEm(j,:); tInew(j)=tI(j); tRnew(j)=tR(j);
+                hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+                rej_ERmove=rej_ERmove+1;
+            end
+        else % otherwise reject immediately
+            tEnew(j)=tE(j); tInew(j)=tI(j); tRnew(j)=tR(j);
+            rej_ERmove=rej_ERmove+1;
+        end
+    end
+    
+    %% UPDATE MISSING KA TREATMENT TIMES
+    for i=1:nONR
+        j=ONR(i); % get index of case without treatment time
+        tRnew(j)=tI(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment time and adding it to onset time
+              
+        if tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % calculate log-likelihood if new recovery time is before PKDL onset/death/end of study
+            tRj=tR(j);
+            tRjnew=tRnew(j);
+            m=(IPNIA==j); % get infex of case in infectiousness matrix
+            hnew(m,tRj+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
+            hnew(m,tRjnew+1:tRj)=0; % remove infectiousness from new treatment time if it is earlier
+            erlrR=min(tRj,tRjnew); % index of column for earlier treatment time between old and new treatment time
+            ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
+            
+            % Calculate new infection pressure
+            idx=erlrR+1:ltrR; % index of columns to change
+            lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+            lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+            
+            % Calculate new log-likelihood terms
+            LL1new=L1(S,lambda_new);
+            LL2new=L2(lambda_new,pold(7),tEm);
+            LL4new=L4(lambda_new,pold(7),tAm);
+            LLnew=LL1new+LL2new+LL4new;
+            LLold=LL1old+LL2old+LL4old;
+            
+            % Calculate Metropolis-Hastings acceptance value
+            log_ap=LLnew-LLold;
+            
+            if log_ap > log(rand) % accept new values if acceptance probability > rand
+                tR(j)=tRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
+                LL1old=LL1new; LL2old=LL2new; 
+                LL4old=LL4new; % keep updated info
+                acc_R=acc_R+1;
+            else % else reject and keep old values
+                tRnew(j)=tR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); % keep old values, don't change log-likelihood
+                rej_R=rej_R+1;
+            end
+        else % otherwise reject immediately
+            tRnew(j)=tR(j);
+            rej_R=rej_R+1;
+        end
+    end
+    
+    %% MOVE WHOLE ONSET-TO-TREATMENT PERIOD OF CASES WITH ACTIVE KA AT START OF STUDY MISSING ONSET AND TREATMENT TIMES
+    for i=1:nANONR
+        j=ANONR(i); % get index of potentially initially active KA case
+        tmp2=0; % onset-to-treatment period shift
+        while tmp2==0 % resample until a non-zero value is obtained
+            tmp2=round(sqrt(ERvar)*randn);
+        end
+        tInew(j)=tI(j)+tmp2; % new onset time
+        tRnew(j)=tInew(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment period and adding it to new onset time
+            
+        % if KA onset and PKDL onset/death in same year and maximum symptom 
+        % period currently chosen, reject immediately as 
+        % infection-to-treatment period cannot be moved
+        if ~(tI(j)==tIlbA(j) && tR(j)==min(min(tP(j)-1,tD(j)),tmax)) && tInew(j)>=tIlbA(j) && tInew(j)<=tIubA(j) && tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax)
+            % calculate log-likelihood if an infection-treatment block move 
+            % is possible; allow treatment month to be same as death month 
+            % as cases were said to have died during treatment                       
+            tRj=tR(j);
+            tRjnew=tRnew(j);
+            
+            if tRj>0 || tRjnew>0 % update likelihood if old or new recovery time is after start month
+                m=(IPNIA==j); % get index of case in infectiousness matrix
+                hnew(m,max(0,tRj)+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
+                hnew(m,max(0,tRjnew)+1:tRj)=0; % remove infectiousness from new treatment time if it is later
+                erlrR=max(0,min(tRj,tRjnew)); % index of column for earlier treatment time between old and new treatment time
+                ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
+                
+                % Calculate new infection pressure
+                idx=erlrR+1:ltrR; % index of columns to change
+                lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+                lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+                
+                % Calculate new log-likelihood terms
+                LL1new=L1(S,lambda_new);
+                LL2new=L2(lambda_new,pold(7),tEm);
+                LL4new=L4(lambda_new,pold(7),tAm);
+                LLnew=LL1new+LL2new+LL4new;
+                LLold=LL1old+LL2old+LL4old;
+                
+                % Calculate Metropolis-Hastings acceptance probability
+                log_ap=LLnew-LLold;
+                
+                if log_ap > log(rand) % accept new values if acceptance probability > rand
+                    tI(j)=tInew(j); tR(j)=tRnew(j);
+                    h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); 
+                    LL1old=LL1new; LL2old=LL2new; 
+                    LL4old=LL4new; % keep updated info
+                    acc_AIRmove=acc_AIRmove+1;
+                else % else reject and keep old values
+                    tInew(j)=tI(j); tRnew(j)=tR(j);
+                    hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+                    rej_AIRmove=rej_AIRmove+1;
+                end
+            else % if both old and new recovery times are in/before start month then likelihood does not change so always accept
+                tI(j)=tInew(j); tR(j)=tRnew(j);
+                acc_AIRmove=acc_AIRmove+1;
+            end
+        else
+            tInew(j)=tI(j); tRnew(j)=tR(j);
+            rej_AIRmove=rej_AIRmove+1;
+        end
+    end
+
+    %% UPDATE MISSING TREATMENT TIMES OF CASES WITH ACTIVE KA AT START OF STUDY
+    for i=1:nAONR
+        j=AONR(i); % get index of potentially initially active KA case
+        tRnew(j)=tI(j)+nbinrnd(r0,p0)+1; % draw new treatment time by drawing new onset-to-treatment time and adding it to onset time
+        
+        if tRnew(j)<=min(min(tP(j)-1,tD(j)),tmax) % calculate log-likelihood if new recovery time is before PKDL onset/death/end of study
+            tRj=tR(j);
+            tRjnew=tRnew(j);           
+            if tRj>0 || tRjnew>0 % calculate log-likelihood if old or new recovery time is after start month
+                m=(IPNIA==j); % get index of case in infectiousness matrix
+                hnew(m,max(0,tRj)+1:tRjnew)=1; % add infectiousness up to new treatment time if it is later
+                hnew(m,max(0,tRjnew)+1:tRj)=0; % remove infectiousness from new treatment time if it is earlier
+                erlrR=max(0,min(tRj,tRjnew)); % index of column for earlier treatment time between old and new treatment time
+                ltrR=max(tRj,tRjnew); % index of column for later treatment time between old and new treatment time
+                
+                % Calculate new infection pressure
+                idx=erlrR+1:ltrR; % index of columns to change
+                lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+                lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+                
+                % Calculate new log-likelihood terms
+                LL1new=L1(S,lambda_new);
+                LL2new=L2(lambda_new,pold(7),tEm);
+                LL4new=L4(lambda_new,pold(7),tAm);
+                LLnew=LL1new+LL2new+LL4new;
+                LLold=LL1old+LL2old+LL4old;                
+                
+                % Calculate Metropolis-Hastings acceptance value
+                log_ap=LLnew-LLold;
+                
+                if log_ap > log(rand) % accept new values if acceptance probability > rand
+                    tR(j)=tRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx); 
+                    LL1old=LL1new; LL2old=LL2new;
+                    LL4old=LL4new; % keep updated info
+                    acc_AR=acc_AR+1;
+                else % else reject and keep old values
+                    tRnew(j)=tR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+                    rej_AR=rej_AR+1;
+                end
+            else % if both old and new recovery times are in/before start month then likelihood does not change so always accept
+                tR(j)=tRnew(j);
+                acc_AR=acc_AR+1;
+            end
+        else % otherwise reject immediately
+            tRnew(j)=tR(j);
+            rej_AR=rej_AR+1;
+        end
+    end
+    
+    %% MOVE WHOLE RELAPSE PERIOD OF RELAPSE CASES MISSING RELAPSE AND RELAPSE TREATMENT TIMES
+    for i=1:nRLNO
+       j=RLNO(i); % get index of relapse case without relapse or relapse treatment times
+       tRLnew(j)=tR(j)+geornd(p4)+1; % draw new relapse time by drawing new treatment-to-relapse time and adding it to treatment time
+       tRLRnew(j)=tRLnew(j)+nbinrnd(r0,p0)+1; % draw new relapse treatment time by drawing time from KA onset-to-treatment time distribution and adding it to relapse time 
+       
+       if tRLnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-2,tmax) && tRLRnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-1,tmax)
+           tRLj=tRL(j);
+           tRLjnew=tRLnew(j);
+           tRLRj=tRLR(j);
+           tRLRjnew=tRLRnew(j);
+           m=(IPNIA==j); % get index of case in infectiousness matrix
+           hnew(m,tRLj+1:tRLRj)=0; % remove old infectiousness
+           hnew(m,tRLjnew+1:tRLRjnew)=1; % add new infectiousness
+           erlrRL=min(tRLj,tRLjnew); % index of column for earlier relapse time between old and new relapse time
+           ltrRL=max(tRLj,tRLjnew); % index of column for later relapse time between old and new relapse time
+           erlrRLR=min(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
+           ltrRLR=max(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
+           
+           % Calculate new infection pressure
+           idx=[erlrRL+1:ltrRL,erlrRLR+1:ltrRLR]; % index of columns to change
+           lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+           lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+           
+           % Calculate new log-likelihood terms
+           LL1new=L1(S,lambda_new);
+           LL2new=L2(lambda_new,pold(7),tEm);
+           LL4new=L4(lambda_new,pold(7),tAm);
+           LLnew=LL1new+LL2new+LL4new;
+           LLold=LL1old+LL2old+LL4old;
+           
+           % Calculate Metropolis-Hastings acceptance probability
+           log_ap=LLnew-LLold;
+           
+           if log_ap > log(rand) % accept new values if acceptance probability > rand
+               tRL(j)=tRLnew(j); tRLR(j)=tRLRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
+               LL1old=LL1new; LL2old=LL2new;
+               LL4old=LL4new; % keep updated info
+               acc_RLNO=acc_RLNO+1;
+           else % else reject and keep old values
+               tRLnew(j)=tRL(j); tRLRnew(j)=tRLR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+               rej_RLNO=rej_RLNO+1;
+           end
+       else % otherwise reject immediately
+           tRLnew(j)=tRL(j); tRLRnew(j)=tRLR(j);
+           rej_RLNO=rej_RLNO+1;
+       end
+    end
+    
+    %% UPDATE MISSING RELAPSE TREATMENT TIMES
+    for i=1:nRLO
+       j=RLO(i); % get index of relapse case missing just relapse treatment time
+       tRLRnew(j)=tRL(j)+nbinrnd(r0,p0)+1; % draw new relapse treatment time by drawing KA onset-to-treatment time and adding it to relapse time
+       
+       if tRLRnew(j)<=min(min(min(tEM(j),tP(j)),tD(j))-1,tmax) % calculate log-likelihood if new relapse treatment time is before emigration/PKDL onset/death/end of study
+           tRLRj=tRLR(j);
+           tRLRjnew=tRLRnew(j);
+           m=(IPNIA==j); % index of case in infectiousness matrix
+           hnew(m,tRLRj+1:tRLRjnew)=1; % add infectiousness if new relapse treatment time is later
+           hnew(m,tRLRjnew+1:tRLRj)=0; % remove infectiousness if new relapse treatment time is earlier
+           erlrRLR=min(tRLRj,tRLRjnew); % index of column for earlier relapse treatment time between old and new relapse treatment time
+           ltrRLR=max(tRLRj,tRLRjnew); % index of column for later relapse treatment time between old and new relapse treatment time
+           
+           % Calculate new infection pressure
+           idx=erlrRLR+1:ltrRLR; % index of columns to change
+           lambdaHH_new(:,idx)=rateHH*hnew(:,idx)+lambdaHHPA(:,idx)+lambdaHHA(:,idx)+pold(3); % new infection pressure on each HH
+           lambda_new(:,idx)=lambdaHH_new(ib,idx); % new infection pressure on each individual
+           
+           % Calculate new log-likelihood terms
+           LL1new=L1(S,lambda_new);
+           LL2new=L2(lambda_new,pold(7),tEm);
+           LL4new=L4(lambda_new,pold(7),tAm);
+           LLnew=LL1new+LL2new+LL4new;
+           LLold=LL1old+LL2old+LL4old;
+           
+           % Calculate Metropolis-Hastings acceptance probability
+           log_ap=LLnew-LLold;
+           
+           if log_ap > log(rand) % accept new values if acceptance probability > rand
+               tRLR(j)=tRLRnew(j); h(m,:)=hnew(m,:); lambda(:,idx)=lambda_new(:,idx); lambdaHH(:,idx)=lambdaHH_new(:,idx);
+               LL1old=LL1new; LL2old=LL2new;
+               LL4old=LL4new; % keep updated info
+               acc_RLO=acc_RLO+1;
+           else % else reject and keep old values
+               tRLRnew(j)=tRLR(j); hnew(m,:)=h(m,:); lambda_new(:,idx)=lambda(:,idx); lambdaHH_new(:,idx)=lambdaHH(:,idx); % keep old values, don't change log-likelihood
+               rej_RLO=rej_RLO+1;
+           end
+       else % otherwise reject immediately
+           tRLRnew(j)=tRLR(j);
+           rej_RLO=rej_RLO+1;
+       end
+    end
     
     %% SAVE PARAMETER VALUES AND PLOT PROGRESS
     % Save parameters, log-likelihood, and presymptomatic infection times,
@@ -2119,9 +2121,9 @@ for k=1:niters
     tIsANONR(:,k)=tI(ANONR);
     tRsANONR(:,k)=tR(ANONR);
     tRsAONR(:,k)=tR(AONR);
-%     tRLRsRLO(:,k)=tRLR(RLO);
-%     tRLsRLNO(:,k)=tRL(RLNO);
-%     tRLRsRLNO(:,k)=tRLR(RLNO);
+    tRLRsRLO(:,k)=tRLR(RLO);
+    tRLsRLNO(:,k)=tRL(RLNO);
+    tRLRsRLNO(:,k)=tRLR(RLNO);
     
     % Update empirical mean and covariance for proposal distribution
     [ppmean,ppvar]=updateMeanAndCovSpencer(ppmean,ppvar,p,k,1000);
@@ -2135,8 +2137,8 @@ for k=1:niters
     acc_rate_R=acc_R/(acc_R+rej_R);
     acc_rate_AIRmove=acc_AIRmove/(acc_AIRmove+rej_AIRmove);
     acc_rate_AR=acc_AR/(acc_AR+rej_AR);
-%     acc_rate_RLNO=acc_RLNO/(acc_RLNO+rej_RLNO);
-%     acc_rate_RLO=acc_RLO/(acc_RLO+rej_RLO);
+    acc_rate_RLNO=acc_RLNO/(acc_RLNO+rej_RLNO);
+    acc_rate_RLO=acc_RLO/(acc_RLO+rej_RLO);
     acc_rate_Aadd=acc_Aadd/(acc_Aadd+rej_Aadd);
     acc_rate_Arem=acc_Arem/(acc_Arem+rej_Arem);
     acc_rate_Amov=acc_Amov/(acc_Amov+rej_Amov);
@@ -2158,7 +2160,7 @@ for k=1:niters
         if plotOutpt && k>burnin % ignore burn-in period
             z=burnin+1:k; % iterations to plot
             figure(4);
-            [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(z,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,[],tI,tR,tD,[],[],nbins,scrnsz);            
+            [mode_p,HPDI,mode_p1,HPDI1]=PlotOutput(z,LL,p,np,pname,priorp,p1,a,b,n,tmax,I,RpreD,DpreR,RL,tI,tR,tD,tRL,tRLR,nbins,scrnsz);            
             figure(5);
             PlotTrace(z,p,np,pname,p1,mode_p,HPDI,mode_p1,HPDI1,scrnsz)
             drawnow
@@ -2178,8 +2180,8 @@ fprintf('Infection period move acceptance rate is %5.3f%%.\n',100*acc_rate_ERmov
 fprintf('Treatment time move acceptance rate is %5.3f%%.\n',100*acc_rate_R);
 fprintf('Active KA case onset-treatment period move acceptance rate is %5.3f%%.\n',100*acc_rate_AIRmove);
 fprintf('Active KA case treatment time move acceptance rate is %5.3f%%.\n',100*acc_rate_AR);
-% fprintf('Relapse KA case relapse period move acceptance rate is %5.3f%%.\n',100*acc_rate_RLNO);
-% fprintf('Relapse KA case treatment time move acceptance rate is %5.3f%%.\n',100*acc_rate_RLO);
+fprintf('Relapse KA case relapse period move acceptance rate is %5.3f%%.\n',100*acc_rate_RLNO);
+fprintf('Relapse KA case treatment time move acceptance rate is %5.3f%%.\n',100*acc_rate_RLO);
 fprintf('Asymptomatic infection removal acceptance rate is %5.3f%%.\n',100*acc_rate_Arem);
 fprintf('Asymptomatic infection time move acceptance rate is %5.3f%%.\n',100*acc_rate_Amov);
 fprintf('Asymptomatic infection addition acceptance rate is %5.3f%%.\n',100*acc_rate_Aadd);

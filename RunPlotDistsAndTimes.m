@@ -9,14 +9,14 @@ for i=1:numel(srcidx)
 end
 ax1=get(hf1,'CurrentAxes');
 set(ax1,'FontSize',14)
-xlabel(ax1,'Mean distance of infectees from infector (m)'); ylabel(ax1,'Count')
+xlabel(ax1,'Mean distance of infectees from infector (m)'); ylabel(ax1,'Density')
 legend(ax1,'VL','PKDL')
 saveas(hf1,name1)
 saveas(hf1,[name1 '.eps'],'epsc')
 saveas(hf1,[name1 '.png'])
 ax2=get(hf2,'CurrentAxes');
 set(ax2,'FontSize',14)
-xlabel(ax2,'Mean infector-onset-to-infectee-infection time (months)'); ylabel(ax2,'Count')
+xlabel(ax2,'Mean infector-onset-to-infectee-infection time (months)'); ylabel(ax2,'Density')
 legend(ax2,'VL','PKDL')
 saveas(hf2,name2)
 saveas(hf2,[name2 '.eps'],'epsc')

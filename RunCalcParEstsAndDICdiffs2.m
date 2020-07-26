@@ -37,12 +37,7 @@ end
 save(['MdlParEstsFinal' IPD runName])
 
 %% Calculate DIC differences from best-fitting model
-DICrslts=cellfun(@(x)[str '_' x],rslts,'UniformOutput',false);
-DICs=[];
-for i=1:numel(DICrslts)
-[DICs,DICmin,DICdiffs,RMLs]=CalcDICdiffs(DICrslts{i},DICs);
-end
-DICminMdl=find(DICs==DICmin);
+[DICs,DICmin,DICdiffs,RMLs,DICminMdl]=RunCalcDICdiffs(rslts,str);
 
 %% Output parameter estimates and DICs to file
 MdlParEstsAndDICs=[MdlParEsts,DICs,DICdiffs];

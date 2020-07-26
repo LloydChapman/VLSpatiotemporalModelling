@@ -3,8 +3,10 @@ set(gcf, 'Position', [0 70 round(scrnsz(3)/2) scrnsz(4) - 150]);
 mode_p=zeros(1,np); % modal parameter values
 HPDI=zeros(np,2); % highest posterior density intervals
 subplot(3+floor(np/2), 2, [1 2])
-plot(z,LL(z));
-axis([z(1) z(end) min(LL(z)) max(LL(z))]);
+% plot(z,LL(z));
+% axis([z(1) z(end) min(LL(z)) max(LL(z))]);
+plot(LL);
+ylim([min(LL)-5e3,Inf])
 xlabel('Iteration');
 ylabel('Log likelihood');
 for j=1:np    
@@ -17,7 +19,7 @@ subplot(3+floor(np/2),2,[5+2*floor(np/2) 6+2*floor(np/2)])
 
 % Number of iterations to plot
 npp=min(100,numel(z));
-pp=randi([z(1) z(end)],1,npp);
+pp=z(randperm(numel(z),npp));
 
 % Calculate numbers of KA cases over time for different MCMC iterations
 tIs=repmat(tI,1,npp);

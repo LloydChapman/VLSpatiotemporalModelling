@@ -22,6 +22,6 @@ meanmeandists=mean(meandists,2,'omitnan');
 meanmeantimes=mean(meantimes,2,'omitnan');
 edges1=0:50:max(meanmeandists)+50;
 edges2=1:max(meanmeantimes)+1;
-figure(hf1); histogram(meanmeandists,edges1,'FaceColor',clr)
-figure(hf2); histogram(meanmeantimes,edges2,'FaceColor',clr) %'BinLimits',[1 max(meanmeantimes)],
+figure(hf1); histogram(meanmeandists,edges1,'Normalization','pdf','FaceColor',clr)
+figure(hf2); histogram(meanmeantimes,edges2,'Normalization','pdf','FaceColor',clr) %'BinLimits',[1 max(meanmeantimes)],
 

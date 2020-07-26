@@ -12,5 +12,5 @@ plot([M M],[0 10*y],'m','LineWidth',1.5)
 plot(BinCentres,prior,'g','LineWidth',1.5);
 axis([min(h.BinEdges) max(h.BinEdges) 0 y])
 set(gca,'FontSize',16);
-xlabel(['$$R_{' num2str(idx) '}$$'],'Fontsize',13,'Interpreter','latex')
+xlabel(['$$R_{' num2str(idx) '}$$ (month)'],'Fontsize',13,'Interpreter','latex')
 ylabel('Density')

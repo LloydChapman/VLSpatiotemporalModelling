@@ -1,4 +1,4 @@
-function SaveSamplesAsCSVs(rslts,nsmpls,burnin1,varargin)
+function SaveSamplesAsCSVs(rslts,nsmpls,burnin1,runName,varargin)
 
 load(rslts)
 
@@ -6,7 +6,7 @@ if ~exist('z','var')
     z=burnin1+1:niters;
 end
 
-if nargin==3
+if nargin==4
     iters=randperm(numel(z),nsmpls);
 else
     iters=varargin{1};
@@ -21,10 +21,10 @@ tRAssmpls=tRAs(:,ziters);
 tRsANONRsmpls=tRsANONR(:,ziters);
 tRsAONRsmpls=tRsAONR(:,ziters);
 
-dlmwrite(['p_' rslts(20:end) '.csv'],psmpls,'precision','%.16f')
-dlmwrite(['p1_' rslts(20:end) '.csv'],p1smpls,'precision','%.16f')
-dlmwrite(['tEs_' rslts(20:end) '.csv'],tEssmpls)
-dlmwrite(['tAs_' rslts(20:end) '.csv'],tAssmpls)
-dlmwrite(['tRAs_' rslts(20:end) '.csv'],tRAssmpls)
-dlmwrite(['tRsANONR_' rslts(20:end) '.csv'],tRsANONRsmpls)
-dlmwrite(['tRsAONR_' rslts(20:end) '.csv'],tRsAONRsmpls)
+dlmwrite(['p' runName '.csv'],psmpls,'precision','%.16f')
+dlmwrite(['p1' runName '.csv'],p1smpls,'precision','%.16f')
+dlmwrite(['tEs' runName '.csv'],tEssmpls)
+dlmwrite(['tAs' runName '.csv'],tAssmpls)
+dlmwrite(['tRAs' runName '.csv'],tRAssmpls)
+dlmwrite(['tRsANONR' runName '.csv'],tRsANONRsmpls)
+dlmwrite(['tRsAONR' runName '.csv'],tRsAONRsmpls)

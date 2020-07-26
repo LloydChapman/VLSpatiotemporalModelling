@@ -1,11 +1,13 @@
 %RUNVALIDATION Script to run validation of MCMC algorithm on simulated data
+clear
 
 %% DATA
 % Load data
 load('data_final2.mat'); % loads table called 'data'
 
 % Set which paras are included in data
-para=1;
+para=1:4;
+str='_Paras1to4';
 
 %% MODEL PARAMETERS
 % Parameters that can be estimated
@@ -36,7 +38,7 @@ beta0=3;
 alpha0=100;
 epsilon0=1e-3;
 delta0=1e-2;
-pI0s=0.1; %[0.1,0.15,0.2];
+pI0s=[0.1,0.15,0.2];
 npI0s=numel(pI0s);
 % Estimate lambda0 by fitting initial status model to LST data from 2002
 s1=load('data_final');
@@ -55,9 +57,9 @@ h40=0.02; % relative infectiousness of asymptomatics
 typ='Exp';
 
 %% MCMC PARAMETERS
-niters=2e5; %1e5; % number of iterations
+niters=1e5; % number of iterations
 plotOutpt=false; % flag for whether to plot output in real-time
-runName='_Para1_Validation1'; %'_Para1_Validation';
+runName=[str '_Validation'];
 % Names of runs for saving
 if r1>1
     IPD='NBIP';
@@ -68,15 +70,23 @@ rslts=['MCMC_' IPD '_PKDL_ASX' runName];
 
 %% RUN MCMC ON SIMULATED DATA WITH DIFFERENT PROPORTIONS OF ASYMPTOMATIC INFECTION
 % Run MCMC chains in parallel
-% parfor i=1:npI0s
-for i=1:npI0s
+parfor i=1:npI0s
+% for i=1:npI0s
     % Set maximum number of computational threads for each parallel worker
     maxNumCompThreads(floor(12/npI0s))
     % Load simulated data
-    simdata=readtable(['sim_output_para1_' num2str(i) '.csv'],'ReadVariableNames',true); % simulated data for para 1
-    Stat0=csvread(['init_stat_para1_' num2str(i) '.csv']); % initial statuses of individuals from simulated data
-    hv=csvread(['PKDL_infctsnss_para1_' num2str(i) '.csv']); % infectiousness of PKDL cases from simulated data
+    simdata=readtable(['sim_output' str '_' num2str(i) '.csv'],'ReadVariableNames',true); % simulated data for para 1
+    Status0=csvread(['init_status' str '_' num2str(i) '.csv']); % initial statuses of individuals from simulated data
+    hv=csvread(['PKDL_infctsnss' str '_' num2str(i) '.csv']); % infectiousness of PKDL cases from simulated data
     nEmoves=round(sum(simdata.tI<108 & simdata.tR<=108)/5); % number of pre-symptomatic infection time updates per iteration
     nAupdts=round(sum(simdata.tA<108)/5); % number of asymptomatic infection time updates per iteration
-    VLStmMCMC2010FastLklhdMgrtnValidation(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,delta0,lambda0,h0,h1,h2,h3,hmssng,h40,pI0s(i),typ,niters,plotOutpt,[rslts '_' num2str(i)],para,simdata,Stat0,hv,nEmoves,nAupdts)
+    VLStmMCMC2010FastLklhdMgrtnValidation(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,delta0,lambda0,h0,h1,h2,h3,hmssng,h40,pI0s(i),typ,niters,plotOutpt,[rslts '_' num2str(i)],para,simdata,Status0,hv,nEmoves,nAupdts)
+end
+
+%% PLOT POSTERIORS FOR PARAMETERS AND ASYMPTOMATIC EPI CURVE AGAINST SIMULATED (TRUE) DATA
+for i=1:npI0s
+    ptrue=dlmread(['p' str '_' num2str(i) '.csv']);
+    p1true=dlmread(['p1' str '_' num2str(i) '.csv']);
+    Status=dlmread(['status_mtrx' str '_' num2str(i) '.csv']);
+    PlotValidation([rslts '_' num2str(i)],ptrue,p1true,[runName '_' num2str(i)],Status)
 end

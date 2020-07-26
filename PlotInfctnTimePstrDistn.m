@@ -12,5 +12,5 @@ plot([M M],[0 1.2*y],'m','LineWidth',1.5)
 plot(BinCentres,prior,'g','LineWidth',1.5);
 axis([min(h.BinEdges) max(h.BinEdges) 0 1.05*y])
 set(gca,'FontSize',16);
-xlabel(['$$E_{' num2str(idx) '}$$'],'Fontsize',16,'Interpreter','latex')
-ylabel('Probability','FontSize',16)
+xlabel(['$$E_{' num2str(idx) '}$$ (month)'],'Fontsize',18,'Interpreter','latex')
+ylabel('Probability')

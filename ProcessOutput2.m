@@ -1,5 +1,5 @@
 function [mode_p,HPDI,mode_p1,HPDI1,pcorr,pIPtAcorr,mode_sptl,HPDI_sptl,mode_bckgrnd,HPDI_bckgrnd,mode_d_half,HPDI_d_half,mode_d_half_out,HPDI_d_half_out,mode_WHHRI,HPDI_WHHRI,mean_IP,mode_IP,HPDI_IP]=ProcessOutput2(str,burnin1,thin,plotMltpl,doPlots,savePlots)
-% close all
+close all
 
 % Load MCMC output
 load(str)
@@ -30,6 +30,7 @@ data.Properties.VariableNames{'HHNEWLAT'}='latitude';
 nbins=50;
 scrnsz=get(0,'ScreenSize');
 zthin=z(1:thin:end);
+nz=numel(zthin);
 % Plot output with fixed parameters excluded
 figure;
 if plotMltpl % multiple realisations of missing KA onset, treatment, relapse and relapse treatment times
@@ -58,19 +59,19 @@ figure; set(gcf, 'Position', [0 70 round(scrnsz(3)/2) round(scrnsz(3)/2.5)]);
 for i=1:nu
     j=u(i);
     subplot(ceil((nu+1)/2),2,i)
-    acf(p(z,j),min(2000,numel(z)-1));
+    acf(p(zthin,j),min(2000,nz-1));
     title(['\' pname{j}])
 end
 subplot(ceil((nu+1)/2),2,nu+1)
 % figure;
-acf(p1(z),min(2000,numel(z)-1));
+acf(p1(zthin),min(2000,nz-1));
 title('$$p$$','Interpreter','latex')
 saveas2(gcf,['ACFs_' rslts],savePlots)
 saveas2(gcf,['ACFs_' rslts '.eps'],savePlots,'epsc')
 
 % Matrix of parameter pair plots
 figure; set(gcf, 'Position', [0 70 round(scrnsz(3)/2) round(scrnsz(3)/2.5)]);
-[~,ax,~,~,~]=plotmatrix2([p(z,u),p1(z)]);
+[~,ax,~,~,~]=plotmatrix2([p(zthin,u),p1(zthin)]);
 for i=1:nu
     j=u(i);
     xlabel(ax(end,i),['\' pname{j}],'Fontsize',13)
@@ -82,12 +83,15 @@ saveas2(gcf,['ParamCrrltn_' rslts],savePlots)
 saveas2(gcf,['ParamCrrltn_' rslts '.eps'],savePlots,'epsc')
 
 % Parameter correlation coefficients
-pcorr=corrcoef([p(z,u) p1(z)]);
+pcorr=corrcoef([p(zthin,u) p1(zthin)]);
 
 %% CORRELATION BETWEEN TRANSMISSION PARAMETERS AND ASYMPTOMATIC INFECTION TIMES
 % Correlation between beta and mean asymptomatic infection time
-betatA=[p(z,1),mean(tAs(:,z),1,'omitnan')'];
-figure; [~,ax,~,~,~]=plotmatrix(betatA);
+mean_tA=NaN(nz,1);
+for i=1:nz
+    mean_tA(i)=mean(tAs(tAs(:,zthin(i))>0 & tAs(:,zthin(i))<tmax+1,zthin(i)));
+end
+figure; [~,ax,~,~,~]=plotmatrix([p(zthin,1),mean_tA]);
 xlabel(ax(end,1),'\beta','Fontsize',13)
 ylabel(ax(1,1),'\beta    ','Fontsize',13,'rot',0)
 xlabel(ax(end,2),'$$\bar{A}$$','Fontsize',13,'Interpreter','latex')
@@ -98,7 +102,7 @@ saveas2(gcf,['betaAsxInfctnTimeCrrltn' rslts '.eps'],savePlots,'epsc')
 % Correlation between transmission parameters, incubation period
 % distribution parameter, incubation periods and asymptomatic infection
 % times
-pIPtA=[p(z,u),p1(z),mean(IPs(:,z),1)',mean(tAs(:,z),1,'omitnan')'];
+pIPtA=[p(zthin,u),p1(zthin),mean(IPs(:,zthin),1)',mean_tA];
 figure; set(gcf, 'Position', [0 70 round(scrnsz(3)/2) round(scrnsz(3)/2.5)]);
 [~,ax,~,~,~]=plotmatrix(pIPtA);
 for i=1:nu
@@ -150,7 +154,7 @@ if mode_p(2)~=0
     figure; 
     [mode_d_half,HPDI_d_half]=PlotPstrDistn(d_half,'d_{1/2} (m)',200);
     figure;
-    d_half_out=HalfRskDstnce([p(zthin,1:3),zeros(numel(zthin),1)],K0(zthin),typ);
+    d_half_out=HalfRskDstnce([p(zthin,1:3),zeros(nz,1)],K0(zthin),typ);
     [mode_d_half_out,HPDI_d_half_out]=PlotPstrDistn(d_half_out,'d_{1/2,out} (m)',200);
 else
     mode_d_half=NaN;
@@ -171,68 +175,64 @@ end
 if doPlots
     mode_tE=zeros(nI,1);
     nplot=20;
-    tEc=NaN(nI,niters);
-    for j=1:niters
-        tEc(ismember(I,pick(:,j)),j)=tEs(ismember(I,pick(:,j)),j);
-    end
     %% Cases with both onset and treatment times
     OR1=OR(tI(OR)>maxIP);
     for i=1:nplot
         j=find(I==OR1(i));
 %         j=randi(nI,1);
         figure;
-        mode_tE(j)=PlotInfctnTimePstrDistn(tEc(j,z),tI(OR1(i)),r1,p10,j);
-%         mode_tE(j)=PlotInfctnTimePstrDistn(tEc(j,z),tI(I(j)),r1,p10,j);
-        saveas2(gcf,['E' num2str(j) rslts],savePlots)
-        saveas2(gcf,['E' num2str(j) rslts '.eps'],savePlots,'epsc')
+        mode_tE(j)=PlotInfctnTimePstrDistn(tEs(j,zthin),tI(OR1(i)),r1,p10,j);
+%         mode_tE(j)=PlotInfctnTimePstrDistn(tEs(j,zthin),tI(I(j)),r1,p10,j);
+        saveas2(gcf,['E' num2str(j) '_' rslts],savePlots)
+        saveas2(gcf,['E' num2str(j) '_' rslts '.eps'],savePlots,'epsc')
     end
 
     %% Cases without onset or treatment times
-    for i=1:nplot
+    for i=1:min(nplot,nNONR)
         j=find(I==NONR(i));
         figure;
-        histogram(tEs(j,z),'Normalization','pdf','BinMethod','integers'); hold on
-        histogram(tIsNONR(i,z),'Normalization','pdf','BinMethod','integers');
-        histogram(tRsNONR(i,z),'Normalization','pdf','BinMethod','integers')
+        histogram(tEs(j,zthin),'Normalization','pdf','BinMethod','integers'); hold on
+        histogram(tIsNONR(i,zthin),'Normalization','pdf','BinMethod','integers');
+        histogram(tRsNONR(i,zthin),'Normalization','pdf','BinMethod','integers')
         set(gca,'FontSize',16);
-        xlabel('t (months)','FontSize',16)
+        xlabel('t (month)','FontSize',16)
         ylabel('Density','FontSize',16)
         h1=legend(['$$E_{' num2str(j) '}$$'],['$$I_{' num2str(j) '}$$'],['$$R_{' num2str(j) '}$$']);
         set(h1,'Interpreter','latex')
-        saveas2(gcf,['EIR' num2str(j) rslts],savePlots)
-        saveaspdf(gcf,['EIR' num2str(j) rslts])
+        saveas2(gcf,['EIR' num2str(j) '_' rslts],savePlots)
+        saveaspdf(gcf,['EIR' num2str(j) '_' rslts])
     end
     
     %% Cases without onset times
     for i=1:nRNO
         j=find(I==RNO(i));
         figure;
-        histogram(tEs(j,z),'Normalization','pdf','BinMethod','integers'); hold on
-        histogram(tIsRNO(i,z),'Normalization','pdf','BinMethod','integers');
+        histogram(tEs(j,zthin),'Normalization','pdf','BinMethod','integers'); hold on
+        histogram(tIsRNO(i,zthin),'Normalization','pdf','BinMethod','integers');
         set(gca,'FontSize',16);
-        xlabel('t (months)','FontSize',16)
+        xlabel('t (month)','FontSize',16)
         ylabel('Density','FontSize',16)
         h2=legend(['$$E_{' num2str(j) '}$$'],['$$I_{' num2str(j) '}$$']);
         set(h2,'Interpreter','latex')
-        saveas2(gcf,['EI' num2str(j) rslts],savePlots)
-        saveaspdf(gcf,['EI' num2str(j) rslts])
+        saveas2(gcf,['EI' num2str(j) '_' rslts],savePlots)
+        saveaspdf(gcf,['EI' num2str(j) '_' rslts])
     end
     %% Cases without treatment times
     mode_tR_ONR=zeros(nONR,1);
     for i=1:nONR
         j=find(I==ONR(i));
         figure; 
-        [mode_tE(j),hE]=PlotInfctnTimePstrDistn(tEs(j,z),tI(ONR(i)),r1,p10,ONR(i));
+        [mode_tE(j),hE]=PlotInfctnTimePstrDistn(tEs(j,zthin),tI(ONR(i)),r1,p10,ONR(i));
         hold on        
-        [mode_tR_ONR(i),hR]=PlotRcvryTimePstrDistn(tRsONR(i,z),tI(ONR(i)),r0,p0,ONR(i));
+        [mode_tR_ONR(i),hR]=PlotRcvryTimePstrDistn(tRsONR(i,zthin),tI(ONR(i)),r0,p0,ONR(i));
         set(gca,'FontSize',16);
-        xlabel('t (months)','Interpreter','tex','FontSize',16)
+        xlabel('t (month)','Interpreter','tex','FontSize',16)
         ylabel('Density','FontSize',16)
         xlim([min(hE.BinEdges) max(hR.BinEdges)])
         h3=legend([hE hR],['$$E_{' num2str(j) '}$$'],['$$R_{' num2str(j) '}$$']);
         set(h3,'Interpreter','latex')
-        saveas2(gcf,['ER' num2str(j) rslts],savePlots)
-        saveaspdf(gcf,['ER' num2str(j) rslts])
+        saveas2(gcf,['ER' num2str(j) '_' rslts],savePlots)
+        saveaspdf(gcf,['ER' num2str(j) '_' rslts])
     end
 end
 
@@ -246,17 +246,16 @@ figure;
 mean_IPs=mean(IPs,1);
 % Plot auto-correlation fn for mean incubation period
 figure;
-acf(mean_IPs(z)',min(200,numel(z)-1));
+acf(mean_IPs(zthin)',min(200,nz-1));
 title('mean IP')
 
 % Plot correlation between mean incubation period and p1
-figure; plot(p1(z),mean_IPs(z),'.')
+figure; plot(p1(zthin),mean_IPs(zthin),'.')
 xlabel('p'); ylabel('mean IP')
 
 %% ASYMPTOMATIC INFECTION AND RECOVERY TIMES
 % Plot epi curve with asymptomatic infection
 edges=0.5:tmax+0.5;
-nz=numel(zthin);
 N1=histcounts(tAs(:,zthin),edges)/nz;
 N2=histcounts(tI(I),edges);
 N3=histcounts(tP,edges);
@@ -267,10 +266,10 @@ figure; plot(t,N1,'Color',clrs(2,:),'LineWidth',1); hold on
 plot(t,N2,'Color',clrs(4,:),'LineWidth',1)
 plot(t,N3,'Color',clrs(5,:),'LineWidth',1);
 set(gca,'FontSize',14)
-xlabel('Time'); ylabel('Number')
+xlabel('Year'); ylabel('Number')
 legend('Asx','VL','PKDL')
-saveas(gcf,'EpiCurve')
-saveas(gcf,'EpiCurve.eps','epsc')
+saveas(gcf,['EpiCurve_' rslts])
+saveas(gcf,['EpiCurve_' rslts '.eps'],'epsc')
 
 % Plot probability of asymptomatic infection before start of study against age
 SusAPANIM=setdiff(SusA,IM);
@@ -280,8 +279,8 @@ plot(aa/12,1-sum(ProbInitStatus(aa,lambda0,p2),2),'LineWidth',2)
 set(gca,'FontSize',14)
 xlabel('Age (years)'); ylabel('Prob. initially recovered from asymptomatic infection')
 legend('imputed prob','model','Location','northwest')
-saveas(gcf,'ProbInitRcrvdAsxVsAge')
-saveas(gcf,'ProbInitRcrvdAsxVsAge.eps','epsc')
+saveas(gcf,['ProbInitRcrvdAsxVsAge_' rslts])
+saveas(gcf,['ProbInitRcrvdAsxVsAge_' rslts '.eps'],'epsc')
 
 % Plot posterior probability of being asymptomatically infected during study
 figure; set(gcf,'Units','Normalized','OuterPosition',[0 0 1 1]);
@@ -290,19 +289,19 @@ plot(I,ones(nI,1),'r.');
 ylim([0 1.1])
 set(gca,'FontSize',18)
 xlabel('Individual'); ylabel('Probability asymptomatically infected during study')
-saveas(gcf,'ProbAsxInfctd')
-saveas(gcf,'ProbAsxInfctd.eps','epsc')
+saveas(gcf,['ProbAsxInfctd_' rslts])
+saveas(gcf,['ProbAsxInfctd_' rslts '.eps'],'epsc')
 
 % Plots of posterior densities of asymptomatic infection times
 for i=[101,7850,20448,22662] % individual 7850 externally immigrated in month 53 into a household with an active KA case
-figure; PlotAsxInfctnTimePstrDistn(tAs(i,z),probA(i,:),tmax,i)
-saveas(gcf,['A' num2str(i)])
-saveas(gcf,['A' num2str(i) '.eps'],'epsc')
+figure; PlotAsxInfctnTimePstrDistn(tAs(i,zthin),probA(i,:),tmax,i)
+saveas(gcf,['A' num2str(i) '_' rslts])
+saveas(gcf,['A' num2str(i) '_' rslts '.eps'],'epsc')
 end
 
 %% PROPOSAL SCALING CONSTANT
 figure; plot(0:niters,c,'LineWidth',1);
 set(gca,'FontSize',14)
 xlabel('Iteration, $$k$$','Interpreter','latex','FontSize',16); ylabel('$$c_k$$','Interpreter','latex','FontSize',16)
-saveas(gcf,'SclngFctr')
-saveas(gcf,'SclngFctr.eps','epsc')
+saveas(gcf,['SclngFctr_' rslts])
+saveas(gcf,['SclngFctr_' rslts '.eps'],'epsc')

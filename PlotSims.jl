@@ -65,6 +65,9 @@ incI2 = PrependIncObsw(incI2,w,para_incIobs);
 probs = [0.025, 0.975];
 mean_diff1, q_diff1, mean_perc_diff1, q_perc_diff1 = CalcPercDiffInc(incI,incI1,probs)
 mean_diff2, q_diff2, mean_perc_diff2, q_perc_diff2 = CalcPercDiffInc(incI,incI2,probs)
+# Overall in last 4 years
+mean_diff_end1, q_diff_end1, mean_perc_diff_end1, q_perc_diff_end1 = CalcPercDiffInc(incI[61:108,:,:],incI1[61:108,:,:],probs)
+mean_diff_end2, q_diff_end2, mean_perc_diff_end2, q_perc_diff_end2 = CalcPercDiffInc(incI[61:108,:,:],incI2[61:108,:,:],probs)
 
 # Para-level
 para_tot_incIobs = sum(para_incIobs,dims=1)[1,:];

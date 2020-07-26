@@ -29,7 +29,7 @@ if nargin==0
     pI0=0.15; % proportion of infections that lead to VL
     hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases
     typ='Exp'; % type of transmission kernel
-    niters=1e1; % no. of MCMC iterations
+    niters=1e5; % no. of MCMC iterations
     plotOutpt=true; % plot output (true) or not (false)
     rslts='MCMC_NBIP_PKDL_ASX.mat'; % name of results file for output
     para=1; % paras to include in the data

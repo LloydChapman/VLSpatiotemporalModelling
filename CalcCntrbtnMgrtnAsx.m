@@ -208,30 +208,38 @@ t=startyr+(0:tmax-1)/12;
 % xlabel('Time'); ylabel('No. susceptibles')
 % saveas(gcf,'NumSscptblesOverTime.png','png')
 
-%% Plot FOI on whole population
 nbins=50;
-PlotCntrbtnModeAndHPDI(FOI,nbins,nsrcs,t,clrs,'Time','FOI (mnth^{-1})',true)
+lgd={'Background','Asx','Presx','VL','PKDL'};
+
+%% Plot FOI on whole population
+PlotCntrbtnModeAndHPDI(FOI,nbins,nsrcs,t,clrs,'Year','Total infection pressure (month^{-1})',true,lgd)
 saveas(gcf,'AbsltCntrbtnFOIAsx')
+saveas(gcf,'AbsltCntrbtnFOIAsx.eps','epsc')
 saveas(gcf,'AbsltCntrbtnFOIAsx.png')
-PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOI,sum(FOI,3)),nbins,nsrcs,t,clrs,'Time','Relative contribution to FOI',true)
+PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOI,sum(FOI,3)),nbins,nsrcs,t,clrs,'Year','Relative contribution to total infection pressure',true,lgd,'west')
 saveas(gcf,'RltveCntrbtnFOIAsx')
+saveas(gcf,'RltveCntrbtnFOIAsx.eps','epsc')
 saveas(gcf,'RltveCntrbtnFOIAsx.png')
 
 %% Plot FOI on susceptibles
-PlotCntrbtnModeAndHPDI(FOIonS,nbins,nsrcs,t,clrs,'Time','FOI x S (mnth^{-1})',true)
+PlotCntrbtnModeAndHPDI(FOIonS,nbins,nsrcs,t,clrs,'Year','Total infection risk (month^{-1})',true,lgd)
 saveas(gcf,'AbsltCntrbtnFOIonSAsx')
+saveas(gcf,'AbsltCntrbtnFOIonSAsx.eps','epsc')
 saveas(gcf,'AbsltCntrbtnFOIonSAsx.png')
-PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonS,sum(FOIonS,3)),nbins,nsrcs,t,clrs,'Time','Relative contribution to FOI x S',true)
+PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonS,sum(FOIonS,3)),nbins,nsrcs,t,clrs,'Year','Relative contribution to total infection risk',true,lgd,'west')
 saveas(gcf,'RltveCntrbtnFOIonSAsx')
+saveas(gcf,'RltveCntrbtnFOIonSAsx.eps','epsc')
 saveas(gcf,'RltveCntrbtnFOIonSAsx.png')
 
 %% Plot FOIs on KA cases at infection times
 totFOIonE=sum(FOIonE,3);
-PlotCntrbtnModeAndHPDI(FOIonE,nbins,nsrcs,1:nE,clrs,'Case number (by onset)','FOI on case (mnth^{-1})',false)
+PlotCntrbtnModeAndHPDI(FOIonE,nbins,nsrcs,1:nE,clrs,'Case number (by onset)','Infection pressure on case (month^{-1})',false,lgd)
 saveas(gcf,'AbsltIndvdlCntrbtnAsx')
+saveas(gcf,'AbsltIndvdlCntrbtnAsx.eps','epsc')
 saveas(gcf,'AbsltIndvdlCntrbtnAsx.png')
-PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonE,totFOIonE),nbins,nsrcs,1:nE,clrs,'Case number (by onset)','Relative contribution to FOI',false)
+PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonE,totFOIonE),nbins,nsrcs,1:nE,clrs,'Case number (by onset)','Relative contribution to infection pressure',false,lgd,'west')
 saveas(gcf,'RltveIndvdlCntrbtnAsx')
+saveas(gcf,'RltveIndvdlCntrbtnAsx.eps','epsc')
 saveas(gcf,'RltveIndvdlCntrbtnAsx.png')
 
 %% Overall contribution to new KA cases over the course of the epidemic
@@ -251,6 +259,7 @@ ylabel('Density')
 legend('Bckgrnd','Asx','Presx','VL','PKDL')
 hold off
 saveas(gcf,'RltveOvrlCntrbtnAsx')
+saveas(gcf,'RltveOvrlCntrbtnAsx.eps','epsc')
 saveas(gcf,'RltveOvrlCntrbtnAsx.png')
 
 %% Save mode and HPDI for relative overall contribution of each infection state to FOIs on KA cases at their infection times

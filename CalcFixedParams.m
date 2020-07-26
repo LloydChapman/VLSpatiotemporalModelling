@@ -77,12 +77,33 @@ RLO=find(REL&~isnan(tRL));
 %% Calculate fixed parameters for simulations
 % Fit negative binomial distribution to onset-to-treatment (OT) times
 [r0,p0]=FitOTdistn(tI(~KothrObs),tR(~KothrObs));
+OT=tR(~KothrObs)-tI(~KothrObs);
+% Plot fit
+figure; histogram(OT(~isnan(OT)),'Normalization','probability','BinMethod','integers'); hold on
+x=1:max(OT); plot(x,nbinpdf(x-1,r0,p0),'LineWidth',1)
+set(gca,'FontSize',14)
+xlabel('VL onset-to-treatment time (months)'); ylabel('Probability')
+xlim([0.5 Inf])
+legend('data','fitted pmf')
+hold off
+saveas(gcf,'VL_OTdistn')
+saveas(gcf,'VL_OTdistn.eps','epsc') 
 
 % Fit negative binomial distribution to KA-treatment-to-PKDL-onset times
 RP=tP-tR;
 pars1=nbinfit(RP(RP>=0 & ~PothrObs));
 r3=pars1(1);
 p3=pars1(2);
+% Plot fit
+figure; histogram(RP(RP>=0 & ~PothrObs),'Normalization','probability','BinMethod','integers'); hold on
+x=0:max(RP); plot(x,nbinpdf(x,r3,p3),'LineWidth',1)
+set(gca,'FontSize',14)
+xlim([-0.5 Inf])
+xlabel('VL-treatment-to-PKDL-onset time (months)'); ylabel('Probability')
+legend('data','fitted pmf')
+hold off
+saveas(gca,'VLRXtoPKDLdistn')
+saveas(gca,'VLRXtoPKDLdistn.eps','epsc')
 
 % Fit geometric distribution to KA-treatment-to-relapse times
 p4=mle(tRL(RLO)-tR(RLO)-1,'distribution','geo');

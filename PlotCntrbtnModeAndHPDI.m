@@ -1,4 +1,4 @@
-function PlotCntrbtnModeAndHPDI(x,nbins,nsrcs,t,clrs,xlbl,ylbl,mode)
+function PlotCntrbtnModeAndHPDI(x,nbins,nsrcs,t,clrs,xlbl,ylbl,mode,lgd,varargin)
 nrow=size(x,2);
 M=zeros(nrow,nsrcs);
 HPDI=zeros(nrow,2,nsrcs);
@@ -23,4 +23,9 @@ end
 set(gca,'FontSize',14)
 xlabel(xlbl); ylabel(ylbl)
 xlim([t(1) t(end)])
-legend(hf1,'Bckgrnd','Asx','Presx','VL','PKDL')
+if nargin==10
+    lcn=varargin{1};
+else
+    lcn='northeast';
+end
+legend(hf1,lgd,'Location',lcn)

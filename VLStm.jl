@@ -360,8 +360,8 @@ function RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANON
     p0 = OTparams[:,2];
     # r0 = 1.369639756715030*ones(9,1);
     # p0 = 0.380308479571719*ones(9,1);
-    r3 = 1.731068698862175;
-    p3 = 0.064609313153733;
+    r3 = 1.729749102087970;
+    p3 = 0.064318501868660;
     # # MATLAB code: pars4=nbinfit(tRP(~isnan(tRP)&~PothrObs)-tP(~isnan(tRP)&~PothrObs)-1)
     # r5 = 1.183947478584665;
     # p5 = 0.065759912826616;
@@ -371,12 +371,12 @@ function RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANON
     # pD = 16/((1-pI0)/pI0*1018); # estimate proportion of asx individuals who develop PKDL as ratio of asx incidence to incidence of PKDL w/o prior KA
 
     tmax = stata_month(endyr,endmo)-origin;
-    h0 = 0.02;
+    # h0 = 0.02;
     # h1 = 9/26/(10/15);
     # h3 = 18/21/(10/15);
     # h2 = (h1+h3)/2;
     # hs = [h1;h2;h3];
-    h4 = 0.02;
+    # h4 = 0.02;
     # ps = [101/138;31/138;6/138];
     # hu = sum(ps.*hs);
     # hs = [h1;h2;h3;hu];
@@ -439,7 +439,7 @@ function RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANON
     for j=1:nsmpls
         println(j)
         for l=1:nsims
-            global t, Status, S, A, E, I, D, P, R, tA, tE, tI, tDor, tP, tR, hv = Simulate(n,w,tmax,Status0s[:,j],P02_10,p2,r1,p1[j],r0,p0,hs,ps,dHH,dHHsqrd,p[j,2],typ,nHH,f,p[j,1],p[j,4],d0,r3,p3,r5,p5,p[j,7],pP,pD,p[j,3],ib,h4,h0,tB,tD,tIM,tEM,INTMIG_OUT,INTMIG_IN,IM_OUT,IM_IN);
+            global t, Status, S, A, E, I, D, P, R, tA, tE, tI, tDor, tP, tR, hv = Simulate(n,w,tmax,Status0s[:,j],P02_10,p2,r1,p1[j],r0,p0,hs,ps,dHH,dHHsqrd,p[j,2],typ,nHH,f,p[j,1],p[j,4],d0,r3,p3,r5,p5,p[j,7],pP,pD,p[j,3],ib,p[j,6],p[j,6],tB,tD,tIM,tEM,INTMIG_OUT,INTMIG_IN,IM_OUT,IM_IN);
             # global t, Status, S, A, E, I, D, P, R, tB, tA, tE, tI, tDor, tP, tR, tD, hv = Simulate(n,w,tmax,Status0s[:,j],P02_10,p2,tEs1[:,j],r1,p1,r0,p0,ANONR,AONR,tRs,tRsANONR1[:,j],tRsAONR1[:,j],tPs,tRPs,hs,ps,dHH,dHHsqrd,alpha,typ,nHH,f,beta,delta,d0,r3,p3,r5,p5,pI,pP,epsilon,ib,h0,tB,tD);
             # local Status, S, A, E, I, D, P, R, tA, tE, tI, tDor, tP, tR
             # global t, Status, S, A, E, I, D, P, R, tB, tA, tE, tI, tDor, tP, tR, tD, hv = Simulate(n,w,tmax,Status0s[:,j],P02_10,p2,r1,p1,r0,p0,hs,ps,dHH,dHHsqrd,alpha,typ,nHH,f,beta,delta,d0,r3,p3,r5,p5,pI,pP,epsilon,ib,h0,tB,tD);
@@ -463,5 +463,42 @@ function RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANON
     # plot(t,[A,E,I,R]) # asx, presx, KA and recovered
     # plot(t,[S,A,E,I,D,P,R]) # all
     # plot(t,sum([S A E I D P R],dims=2)) # total population
+
+end
+
+function SaveOutput(incA,incI,incP,K02_10,t,Status,tA,tE,tI,tDor,tP,tR,hv,df,w,tAs,tRAs,tEs,origin,str)
+    # Reshape status matrix
+    Status_wide = reshape(Status,length(tA),length(t));
+
+    # Add observed data in unsimulated window
+    tA[vec(tAs.<=w)] = tAs[tAs.<=w];
+    tR[vec(tRAs.<=w)] = tRAs[tRAs.<=w];
+    tEs1 = Vector{Union{Missing,Int64}}(missing,size(df,1));
+    tEs1[K02_10] = tEs;
+    tE[convertToBool(tEs1.<=w)] = tEs[tEs.<=w];
+    infw = ((df.KA.>origin) .& (df.KA.<=origin+w) .& ismissing.(df.MIG_IN)) .& .!(df.INTMIG_IN.==1);
+    infw = convertToBool(infw);
+    tI[infw] = df.KA[infw].-origin;
+    P02_10sim = vec(any(Status_wide.==6,dims=2));
+    DorOrRecw = ((df.KARX.>origin) .& (df.KARX.<=origin+w) .& ismissing.(df.MIG_IN)) .& .!(df.INTMIG_IN.==1);
+    Dorw = DorOrRecw .& P02_10sim;
+    Dorw = convertToBool(Dorw);
+    tDor[Dorw] = df.KARX[Dorw].-origin;
+    Recw = DorOrRecw .& .!P02_10sim;
+    Recw = convertToBool(Recw)
+    tR[Recw] = df.KARX[Recw].-origin;
+
+    # Write event times into dataframe
+    dfo = DataFrame([tA,tE,tI,tDor,tP,tR],[:tA,:tE,:tI,:tDor,:tP,:tR]);
+
+    # Save simulation output
+    CSV.write("sim_output" * str * ".csv",dfo)
+    writedlm("status_mtrx" * str * ".csv",Status_wide,",")
+    writedlm("init_status" * str * ".csv",Status_wide[:,1],",")
+    writedlm("PKDL_infctsnss" * str * ".csv",hv,",")
+
+    save("incA" * str * ".jld","incA",incA)
+    save("incI" * str * ".jld","incI",incI)
+    save("incP" * str * ".jld","incP",incP)
 
 end
