@@ -1,4 +1,4 @@
-function [M,HPDI,iters]=CalcCntrbtnMgrtnAsx(rslts,nsmpls,burnin1)
+function [M,HPDI,iters]=CalcCntrbtnMgrtnAsx(rslts,nsmpls,burnin1,varargin)
 
 db='';
 rng=[];
@@ -26,7 +26,11 @@ if ~exist('z','var')
 end
 
 % Get indices of nsmpls to be drawn from the MCMC chain with the burn-in discarded
-iters=randperm(numel(z),nsmpls);
+if nargin==3
+    iters=randperm(numel(z),nsmpls);
+else
+    iters=varargin{1};
+end
 
 hP=zeros(nIPNIA,tmax);
 for i=1:nIandP
@@ -222,11 +226,11 @@ saveas(gcf,'RltveCntrbtnFOIAsx.eps','epsc')
 saveas(gcf,'RltveCntrbtnFOIAsx.png')
 
 %% Plot FOI on susceptibles
-PlotCntrbtnModeAndHPDI(FOIonS,nbins,nsrcs,t,clrs,'Year','Total infection risk (month^{-1})',true,lgd)
+PlotCntrbtnModeAndHPDI(FOIonS,nbins,nsrcs,t,clrs,'Year','Total infection pressure (month^{-1})',true,lgd)
 saveas(gcf,'AbsltCntrbtnFOIonSAsx')
 saveas(gcf,'AbsltCntrbtnFOIonSAsx.eps','epsc')
 saveas(gcf,'AbsltCntrbtnFOIonSAsx.png')
-PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonS,sum(FOIonS,3)),nbins,nsrcs,t,clrs,'Year','Relative contribution to total infection risk',true,lgd,'west')
+PlotCntrbtnModeAndHPDI(bsxfun(@rdivide,FOIonS,sum(FOIonS,3)),nbins,nsrcs,t,clrs,'Year','Relative contribution to total infection pressure',true,lgd,'west')
 saveas(gcf,'RltveCntrbtnFOIonSAsx')
 saveas(gcf,'RltveCntrbtnFOIonSAsx.eps','epsc')
 saveas(gcf,'RltveCntrbtnFOIonSAsx.png')

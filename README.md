@@ -1,6 +1,6 @@
 # Inferring transmission trees to quantify spatiotemporal spread of visceral leishmaniasis
 
-This repository contains MCMC code and simulation code for estimating the parameters of, and simulating, the individual-level spatial kernel visceral leishmaniasis transmission model described in ['Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post-kala-azar dermal leishmaniasis'](https://doi.org/10.1101/2020.02.24.20023325) [1].
+This repository contains MCMC code and simulation code for estimating the parameters of, and simulating, the individual-level spatial kernel visceral leishmaniasis transmission model described in ['Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post–kala-azar dermal leishmaniasis'](https://doi.org/10.1073/pnas.2002731117) [1].
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ This repository contains MCMC code and simulation code for estimating the parame
 
 ## Data
 
-The MCMC code requires data (files 'data_final.mat' and 'data_final2.mat') which cannot be made publicly available as they contain personally identifiable information. If you would like to obtain a copy of the data please contact <lloyd.chapman@lshtm.ac.uk> in the first instance. Simulated data and code for testing the MCMC  algorithm on it will be added to this repository in due course. All data necessary to run the Julia simulation code is contained within this repository.
+The MCMC code and simulation code require datasets ('data_final.mat' and 'data_final2.mat') that cannot be made publicly available as they contain personally identifiable information. If you would like to obtain a copy of the data please contact <lloyd.chapman@ucsf.edu> in the first instance. Simulated data and code for testing the MCMC algorithm on it will be added to this repository in due course.
 
 ## Installing
 
@@ -52,7 +52,7 @@ The MCMC output can then be processed to compare different models tested, derive
 
 at the command prompt.
 
-### Julia code
+### Simulation code
 
 Once Julia has been installed, the simulation code can be run by opening a Command Prompt (Windows)/Terminal window (Mac/Linux) and typing `julia` at the prompt, changing the working directory to where the code is saved, then installing the required packages by entering the following commands:
 
@@ -82,7 +82,7 @@ julia> include("PlotSims.jl")
 
 ## Authors
 
-* **Lloyd Chapman:** <lloyd.chapman@lshtm.ac.uk>
+* Lloyd Chapman: <lloyd.chapman@ucsf.edu>
 
 ## License
 
@@ -94,7 +94,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 * The code for plotting the shaded arrows in the transmission trees uses the MATLAB functions "quiver_thick.m" and "arrow_thick.m" from [Open Earth Tools](https://svn.oss.deltares.nl/repos/openearthtools/trunk/matlab/general/plot_fun/).
 
 ## References
-1. Chapman LAC, Spencer SEF, Pollington TM, Jewell CP, Mondal D, Alvar J, Hollingsworth TD, Cameron MM, Bern C, Medley GF. Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post-kala-azar dermal leishmaniasis. medRxiv 2020; doi: [10.1101/2020.02.24.20023325](https://doi.org/10.1101/2020.02.24.20023325)
+1. Chapman LAC, Spencer SEF, Pollington TM, Jewell CP, Mondal D, Alvar J, Hollingsworth TD, Cameron MM, Bern C, Medley GF. Inferring transmission trees to guide targeting of interventions against visceral leishmaniasis and post–kala-azar dermal leishmaniasis. Proceedings of the National Academy of Sciences 2020; doi:[10.1073/pnas.2002731117](https://doi.org/10.1073/pnas.2002731117)
  
 
-2. SEF Spencer. Accelerating adaptation in the adaptive Metropolis Hastings random walk algorithm. (Submitted), 1–19 (2020).
+2. SEF Spencer. Accelerating adaptation in the adaptive Metropolis Hastings random walk algorithm. (In preparation), 1–19 (2020).

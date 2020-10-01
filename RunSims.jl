@@ -63,7 +63,7 @@ ps = [101/138;31/138;6/138]; # proportions of different PKDL types (macular/papu
 hu = sum(ps.*hs); # average infectiousness of unexamined PKDL cases
 hs = [h1;h2;h3;hu];
 ps = [101/190;31/190;6/190;52/190]; # proportions of different PKDL types including unexamined cases
-incA, incI, incP, origin, tmax, K02_10, P02_10, t, Status, tA, tE, tI, tDor, tP, tR, hv = RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANONR,tRsAONR,nsmpls,nsims,r5,p5,pP,pD,hs,ps)
+incA, incI, incP, origin, tmax, K02_10, P02_10, t = RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANONR,tRsAONR,nsmpls,nsims,r5,p5,pP,pD,hs,ps)
 # Save variables needed for plotting - have to use JLD2 due to issues with saving Booleans with JLD
 save("plot_vrbles_w12.jld2","para",para,"startyr",startyr,"w",w,"t",t,"origin",origin,"tmax",tmax,"K02_10",K02_10,"P02_10",P02_10);
 # Save output
