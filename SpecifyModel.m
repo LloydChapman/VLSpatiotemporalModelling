@@ -2,7 +2,7 @@
 
 %% DATA
 % Load data
-load('data_final2.mat'); % loads table called 'data'
+load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat'); % loads table called 'data'
 
 % Set which paras are included in data
 para=1:19;
@@ -35,7 +35,7 @@ epsilon0=1e-3;
 delta0=1e-2;
 pI0=0.15;
 % Estimate lambda0 by fitting initial status model to LST data from 2002
-s1=load('data_final');
+s1=load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\1999_2004dataset\data_final.mat');
 [pars,~]=FitCatModLST3(s1.data,p2);
 lambda0=pars/12;
 
@@ -46,7 +46,7 @@ h2=(h1+h3)/2; % plaque (assumed halfway between macular/papular and nodular)
 hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases for cases who weren't physically examined
 
 %% MCMC parameters
-niters=1e5; % number of iterations
+niters=2; % number of iterations
 plotOutpt=false; % flag for whether to plot output in real-time
 runName='_AllParas';
  

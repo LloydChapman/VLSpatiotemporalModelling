@@ -2,7 +2,7 @@ function VLStmMCMC2010FastLklhdMgrtn(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,
 
 %% Set default input parameters if no inputs are supplied
 if nargin==0
-    load('data_final2.mat') % database
+    load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat') % database
     % Parameters for negative binomial incubation period distribution
     r1=3; % shape parameter
     mu=5; % mean incubation period in months
@@ -17,7 +17,7 @@ if nargin==0
     epsilon0=1e-3; % background transmission rate
     delta0=1e-2; % additional within-HH transmission rate
     % Estimate historical asymptomatic infection rate by fitting initial status model to LST data from 2002
-    s1=load('data_final.mat');
+    s1=load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\1999_2004dataset\data_final.mat');
     [pars,~]=FitCatModLST3(s1.data,p2);
     lambda0=pars/12; % historical asymptomatic infection rate
     h0=0.02; % relative infectiousness of pre-symptomatics
