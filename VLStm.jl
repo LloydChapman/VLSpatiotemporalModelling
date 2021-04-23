@@ -68,13 +68,13 @@ function Iterate(n,Status,rateHH,epsilon,ib,h4,h0,hs,ps,hv,t,tB,tA,tE,tI,tDor,tP
     # TimeD = Inf*ones(n);
 
     PreB = (Status.==0);
-    Sus = (Status.==1);
-    Asx = (Status.==2);
-    Exp = (Status.==3);
-    inf = (Status.==4);
-    Dor = (Status.==5);
-    PKDL = (Status.==6);
-    Rec = (Status.==7);
+    Sus = (Status.==1) .& (tD .> t) .& (tEM .> t);
+    Asx = (Status.==2) .& (tD .> t) .& (tEM .> t);
+    Exp = (Status.==3) .& (tD .> t) .& (tEM .> t);
+    inf = (Status.==4) .& (tD .> t) .& (tEM .> t);
+    Dor = (Status.==5) .& (tD .> t) .& (tEM .> t);
+    PKDL = (Status.==6) .& (tD .> t) .& (tEM .> t);
+    Rec = (Status.==7) .& (tD .> t) .& (tEM .> t);
     Death = (Status.==8);
     PreDeath = .!PreB .& .!Death;
     Rate = zeros(n);
