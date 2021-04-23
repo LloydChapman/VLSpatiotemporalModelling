@@ -36,7 +36,7 @@ Clone/download this project into a folder on your machine using the green button
 
 ### MCMC code
 
-Once MATLAB has been installed and you have data in the required format, the MCMC code can be run by opening MATLAB, changing the working directory to the folder in which the files are saved, setting the parameters for the model(s) you would like to test in the SpecifyModel.m script, and then running each model by entering
+Once MATLAB has been installed and you have data in the required format and fixed parameters obtained (`CalcFixedParams`), the MCMC code can be run by opening MATLAB, changing the working directory to the folder in which the files are saved, setting the parameters for the model(s) you would like to test in the SpecifyModel.m script, and then running each model by entering
 
 ```matlab
 >> RunMCMC(i)
