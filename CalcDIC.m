@@ -12,7 +12,7 @@ end
 
 % Load data
 % load(db)
-load('data_final2.mat')
+load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat')
 % Select data for para
 data=data(ismember(data.PARA,para),:);
 % Rename longitude and latitude variables
