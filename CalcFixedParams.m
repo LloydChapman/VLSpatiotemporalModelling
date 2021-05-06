@@ -1,8 +1,8 @@
 clear
 
 %% Load data
-load('data_final2.mat')
-
+load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat');
+data.MOS_RX_NEW_SX = str2double(data.MOS_RX_NEW_SX);
 % Number of individuals
 n=size(data,1);
 
