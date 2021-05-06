@@ -258,13 +258,15 @@ I1=find(tI>maxIP&~IpreEXTIM&~EXTIMsoonI&~KothrObs);
 [dHH,ia,ib]=CalcHHDists(data);
 nHH=numel(ia); % number of HHs
 f=histcounts(ib,1:nHH+1)'; % number of individuals in each HH
+f=repmat(f,1,length(f)); % a matrix containing column vectors(occupancy count per household) duplicated
+ftransp = f';
 if strcmp(typ,'Cauchy') % calculate square of distance matrix if using Cauchy kernel
     dHHsqrd=dHH.^2;
 else
     dHHsqrd=[];
 end
 % Calculate spatial kernel 
-[KHH,K0old]=Knl_fast(dHH,dHHsqrd,alpha0,beta0,typ,n,nHH,ib,f,1:n);
+[KHH,K0old]=Knl_fast(dHH,dHHsqrd,alpha0,beta0,n,nHH,ib,f,ftransp,1:n);
 
 d0=speye(nHH); % sparse identity matrix for additional within-HH transmission
 % Calculate HH-level transmission rate matrix
@@ -857,7 +859,7 @@ for k=1:niters
         end
         
         % Calculate new infection pressure
-        [KHH_new,K0new]=Knl_fast(dHH,dHHsqrd,pnew(2),pnew(1),typ,n,nHH,ib,f,1:n); % update spatial kernel
+        [KHH_new,K0new]=Knl_fast(dHH,dHHsqrd,pnew(2),pnew(1),n,nHH,ib,f,ftransp,1:n); % update spatial kernel
         rateHHA_new=pnew(1)*KHH_new; % new HH-level transmission rate
         if pnew(4)~=0 % additional within-HH transmission rate is non-zero
             rateHHA_new=rateHHA_new+pnew(4)*d0; % add additional within-HH contribution
