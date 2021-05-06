@@ -3,7 +3,7 @@
 %% DATA
 % Load data
 load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat'); % loads table called 'data'
-
+data.MOS_RX_NEW_SX = str2double(data.MOS_RX_NEW_SX);
 % Set which paras are included in data
 para=1:19;
 
@@ -46,7 +46,7 @@ h2=(h1+h3)/2; % plaque (assumed halfway between macular/papular and nodular)
 hmssng=(101/138*h1+31/138*h2+6/138*h3); % unexamined - use average relative infectiousness of examined PKDL cases for cases who weren't physically examined
 
 %% MCMC parameters
-niters=2; % number of iterations
+niters=28; % number of iterations
 plotOutpt=false; % flag for whether to plot output in real-time
 runName='_AllParas';
  
