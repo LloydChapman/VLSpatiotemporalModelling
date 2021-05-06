@@ -11,3 +11,5 @@ data_final2.csv
 *.avi
 *.mp4
 .Rproj.user
+resources/*
+*.prj
