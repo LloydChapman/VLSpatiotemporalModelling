@@ -1,0 +1,14 @@
+AsxInfctsnssDICTests/
+Para1Validation/
+data_final2.csv
+*.mat
+*.jld
+*.jld2
+*.fig
+*.eps
+*.pdf
+*.png
+*.avi
+*.mp4
+.Rproj.user
+
