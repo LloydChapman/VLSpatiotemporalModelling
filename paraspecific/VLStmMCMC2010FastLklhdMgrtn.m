@@ -469,6 +469,7 @@ tA(IM_IN(ismember(IM_OUT,Asx)))=tmax+2;
 tRA(IM_IN(ismember(IM_OUT,Asx)))=tmax+2;
 % Draw asymptomatic infection and recovery times according to probability
 % of asymptomatic infection from KA and PKDL cases
+
 for i=1:nAsx
     j=Asx(i);
     tA(j)=randsample(1:tmax,1,true,probA(j,2:tmax+1));
