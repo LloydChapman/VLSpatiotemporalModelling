@@ -132,6 +132,7 @@ IMP=find(PothrObs&tP<tIM&tRP>tIM|PpreEXTIM); % active PKDL cases who internally 
 % 1st and 2nd obs are matched in IM_OUT and IM_IN)
 IM_OUT=find(ismember(data.RESP_ID,data.ORIG_ID(INTMIG_IN))&INTMIG_OUT); % observation in 1st HH
 IM_IN=find(ismember(data.ORIG_ID,data.RESP_ID(INTMIG_OUT))&INTMIG_IN); % observation in 2nd HH
+IM_IN=IM_IN(ismember(IM_IN,IM_OUT+1)); % for para-specific which have an internal study mig but which is lost to the para, this balances them, ready for IM_OUT_IN=[IM_OUT,IM_IN] later
 % KA cases who (potentially) initially had active KA
 AOR=find(actvK&~isnan(tI)&~isnan(tR)); % cases with active KA
 AONR=find(actvK&~isnan(tI)&isnan(tR)); % cases with KA onset before start of study but missing recovery time
