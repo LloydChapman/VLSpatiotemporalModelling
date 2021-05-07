@@ -905,7 +905,8 @@ for k=1:niters
     end
     
     %% GIBBS UPDATE SUCCESS PROBABILITY PARAMETER FOR INCUBATION PERIOD DISTRIBUTION
-    p1new=betarnd(a+r1*nI,b+sum(IPold(I))-nI);
+    p1new=betarnd(a+r1*nI,b+sum(IPold(I))-nI); % draw new value of p1 from its conditional posterior distribution
+    LL3old=L3(IPold(I),r1,p1new); % update stored value of incubation period log-likelihood term for new p1 value
  
     %% UPDATE PRE-SYMPTOMATIC INFECTION TIMES    
     for i=1:size(pick,1)

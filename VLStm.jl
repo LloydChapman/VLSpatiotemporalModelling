@@ -407,14 +407,14 @@ function RunSims(df,para,startyr,startmo,endyr,endmo,w,p,p1,tAs,tRAs,tEs,tRsANON
         tRsAONR1[AONR,:] = tRsAONR;
     end
 
-    Asx0s = (tAs.<=w) .& (tRAs.>w);
-    Exp0s = (tEs1.<=w) .& (df.KA.>origin+w) .& .!IM;
+    Asx0s = (tAs.<=w) .& (tRAs.>w) .& (tD .> t) .& (tEM .> t);
+    Exp0s = (tEs1.<=w) .& (df.KA.>origin+w) .& .!IM .& (tD .> t) .& (tEM .> t);
     Exp0s = convertToBool(Exp0s);
-    inf0s = (((df.KA.<=origin+w) .& (df.KARX.>origin+w) .& ismissing.(df.MIG_IN)) .| (tRsANONR1.>w) .| (tRsAONR1.>w)) .& .!INTMIG_IN;
+    inf0s = (((df.KA.<=origin+w) .& (df.KARX.>origin+w) .& ismissing.(df.MIG_IN)) .| (tRsANONR1.>w) .| (tRsAONR1.>w)) .& .!INTMIG_IN .& (tD .> t) .& (tEM .> t);
     inf0s = convertToBool(inf0s);
-    Dor0s = (prevK  .| (tRsANONR1.<=w) .| (tRsAONR1.<=w)) .& P02_10 .& .!INTMIG_IN;
+    Dor0s = (prevK  .| (tRsANONR1.<=w) .| (tRsAONR1.<=w)) .& P02_10 .& .!INTMIG_IN .& (tD .> t) .& (tEM .> t);
     Dor0s = convertToBool(Dor0s);
-    Rec0s = (((prevK .| (tRsANONR1.<=w) .| (tRsAONR1.<=w)) .& .!P02_10) .| ((tAs.<=w) .& (tRAs.<=w))) .& .!INTMIG_IN;
+    Rec0s = (((prevK .| (tRsANONR1.<=w) .| (tRsAONR1.<=w)) .& .!P02_10) .| ((tAs.<=w) .& (tRAs.<=w))) .& .!INTMIG_IN .& (tD .> t) .& (tEM .> t);
     Rec0s = convertToBool(Rec0s);
 
     Status0s = ones(n,nsmpls1);
