@@ -6,6 +6,12 @@ ran post processing to get csvs though needed to define para again in command wi
 6/19 incomplete paras 2,7,12,14,17,18. why? All hadn't even reached 1000 iteration printout when I checked on mon 10 may 11:08.
 Hoping re-running the command will fix it? Doesn't appear to have.
 
+On VLStmMCMC2010FastLklhdMgrtn.m I tried to show all iter printouts at line 2082 but didnt reach here
+
+
+
+
+
 >> RunMCMC(6,3)
 Warning: The sample mean exceeds the sample variance -- use POISSFIT instead. 
 > In nbinfit (line 56)

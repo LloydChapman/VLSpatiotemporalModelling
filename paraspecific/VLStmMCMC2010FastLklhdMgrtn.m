@@ -1,5 +1,5 @@
 function VLStmMCMC2010FastLklhdMgrtn(data,r1,p10,a,b,p2,u,beta0,alpha0,epsilon0,delta0,lambda0,h0,h1,h2,h3,hmssng,h40,pI0,typ,niters,plotOutpt,rslts,para)
-
+disp('line2')
 %% Set default input parameters if no inputs are supplied
 if nargin==0
     load('C:\Users\timpo\OneDrive - University of Warwick\taubern_baybern\raw_data_plus_cleaning\matlab_bayesianmodel\data_final2.mat') % database
@@ -321,7 +321,7 @@ for i=1:nIMP
 end
 % Convert infectiousness matrix to sparse matrix
 h=sparse(h);
-
+disp('324')
 % Calculate HH-level infection pressure from KA and PKDL cases
 lambdaHHI=rateHH*h; % HH-level infection pressure
 lambdaI=lambdaHHI(ib,:); % expand to individual-level infection pressure
@@ -448,7 +448,7 @@ IM_INactvA=IM_IN(ismember(IM_OUT,actvA));
 % migration (during their 2nd obs)
 RAobs1actvA=IM_OUTactvA(tRA(IM_OUTactvA)>rng(IM_OUTactvA,2)-1);
 RAobs2actvA=IM_INactvA(tRA(IM_OUTactvA)>rng(IM_OUTactvA,2)-1);
-
+disp('451')
 % Calculate the number of asymptomatic infections without subsequent PKDL
 % during the study using the (initial) proportion of infections that lead
 % to KA (pI0), the observed number of KA cases (nI) and the observed number
@@ -677,7 +677,7 @@ ppvar=ppvar0;
 % Make vector for storing scale factor for proposal covariance matrix for block update
 c=NaN(niters+1,1);
 c(1)=1; % initial scale factor
-
+disp('680')
 % Set number of pre-symptomatic and asymptomatic infection times to propose new values for per iteration
 nEmoves=round(nOR/5); % number of pre-symptomatic infection times
 % Randomly select which KA cases to update infection times for in each iteration
@@ -841,7 +841,7 @@ acc_rate_RLO=0;
 % Parameters for plotting output
 nbins=50;
 scrnsz=get(0,'ScreenSize');
-
+disp('844')
 %% MCMC LOOP
 for k=1:niters
     %% UPDATE TRANSMISSION PARAMETERS USING ADAPTIVE RANDOM WALK METROPOLIS-HASTINGS    
@@ -1652,7 +1652,7 @@ for k=1:niters
             rej_PA=rej_PA+1;
         end
     end
-
+disp('1655')
     %% UPDATE MISSING KA ONSET TIMES
     for i=1:nNO
         j=NO(i); % get index of KA case without onset time
@@ -1892,7 +1892,7 @@ for k=1:niters
             rej_AIRmove=rej_AIRmove+1;
         end
     end
-
+disp('1895')
     %% UPDATE MISSING TREATMENT TIMES OF CASES WITH ACTIVE KA AT START OF STUDY
     for i=1:nAONR
         j=AONR(i); % get index of potentially initially active KA case
