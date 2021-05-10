@@ -3,6 +3,9 @@ started friday 10 may 16:14
 completion of <19 paras by sat 12:26
 ran post processing to get csvs though needed to define para again in command window
 
+6/19 incomplete paras 2,7,12,14,17,18. why? All hadn't even reached 1000 iteration printout when I checked on mon 10 may 11:08.
+Hoping re-running the command will fix it? Doesn't appear to have.
+
 >> RunMCMC(6,3)
 Warning: The sample mean exceeds the sample variance -- use POISSFIT instead. 
 > In nbinfit (line 56)
@@ -10,13 +13,5 @@ In FitOTdistn (line 7)
 In VLStmMCMC2010FastLklhdMgrtn (line 170)
 In RunMCMC (line 15) 
 
->> RunMCMC(6,8)
-Warning: The sample mean exceeds the sample variance -- use POISSFIT instead. 
-> In nbinfit (line 56)
-In FitOTdistn (line 7)
-In VLStmMCMC2010FastLklhdMgrtn (line 170)
-In RunMCMC (line 15) 
+same with para8
 
-DO COMMIT!
-6/19 incomplete paras 2,7,12,14,17,18. why? All hadn't even reached 1000 iteration printout when I checked on mon 10 may 11:08.
-Hoping re-running the command will fix it?

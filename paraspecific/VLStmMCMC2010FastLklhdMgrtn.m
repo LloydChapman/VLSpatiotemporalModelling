@@ -2079,7 +2079,8 @@ for k=1:niters
     acc_rate_PA=acc_PA/(acc_PA+rej_PA);
 
     % Print output
-    if mod(k,1e3)==0 || k==niters % every 1000 iterations
+    %if mod(k,1e3)==0 || k==niters % every 1000 iterations. Commented to
+    %plot at every iteration
         fprintf('Iteration %d done.\n', k); % display iteration number
         fprintf('Current likelihood=%6.4g\n', LL(k));
         fprintf('LL1=%6.4g\n', terms(k,1));
@@ -2103,7 +2104,7 @@ for k=1:niters
             end
             fprintf('mode p1=%6.4g\n', mode_p1);
         end
-    end
+    %end
 end
  
 %% DISPLAY ACCEPTANCE RATES
