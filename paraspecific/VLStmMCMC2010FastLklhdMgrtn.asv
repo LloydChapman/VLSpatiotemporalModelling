@@ -37,7 +37,6 @@ end
  
 %% LOAD DATA 
 % Select data for para
-wholestudy=data;
 data=data(ismember(data.PARA,para),:);
 
 % Rename longitude and latitude variables
@@ -91,8 +90,6 @@ disp('89')
 % Make event time vectors
 tI=data.KA-origin; % KA onset
 tR=data.KARX+durRX-origin; % KA recovery
-tIwholestudy=wholestudy.KA-origin; % for study-wide FitOTdistn() fit
-tRwholestudy=wholestudy.KARX+durRX-origin; % for study-wide FitOTdistn() fit
 % Add 1 month of infectiousness for treatment failure KA cases
 tR(RXF)=tR(RXF)+1;
 tRL=data.KARX+data.MOS_RX_NEW_SX-origin; % KA relapse
@@ -169,8 +166,8 @@ tIlb=NaN(n,1);
 tIlb(I)=max(stata_month(data.KAYR(I),1)-origin,tB(I)+2); % +2 because individuals can only be infected 1 month after birth or immigration
 tIub=NaN(n,1);
 tIub(I)=min(min(min(stata_month(data.KAYR(I),12)-origin,tR(I)-1),tP(I)-2),tD(I)-1);
-% Fit negative binomial distribution to onset-to-treatment (OT) times
-[r0,p0]=FitOTdistn(tIwholestudy,tRwholestudy); % use all cases with onset and treatment times (not only those with onset in 2002-2010) as this distn is mostly used to impute missing times for active KA cases at start of study
+% Fit Negative Binomial/Poisson distribution to onset-to-treatment (OT) times
+[r0,p0]=FitOTdistn(tI,tR); % use all cases with onset and treatment times (not only those with onset in 2002-2010) as this distn is mostly used to impute missing times for active KA cases at start of study
 
 % For individuals with missing onset, diagnosis and treatment times draw
 % onset time at random from onset year
@@ -180,14 +177,14 @@ end
 % Draw treatment times for these individuals using OT distn
 for i=1:nNONR
     while isnan(tR(NONR(i))) || tR(NONR(i))>min(tD(NONR(i)),tmax)
-        tR(NONR(i))=tI(NONR(i))+nbinrnd(r0,p0)+1;
+        tR(NONR(i))=tI(NONR(i))+DrawOT(r0,p0);
     end
 end
 % For individuals with onset time but no treatment time draw treatment time
 % using OT distn
 for i=1:nONR
     while isnan(tR(ONR(i))) || tR(ONR(i))>min(tD(ONR(i)),tmax)
-        tR(ONR(i))=tI(ONR(i))+nbinrnd(r0,p0)+1;
+        tR(ONR(i))=tI(ONR(i))+DrawOT(r0,p0);
     end
 end
 % For individuals with treatment time but no onset time draw onset time at
@@ -208,12 +205,21 @@ for i=1:nANONR
 end
 for i=1:nANONR
     while isnan(tR(ANONR(i))) || tR(ANONR(i))>min(tD(ANONR(i)),tmax)
-        tR(ANONR(i))=tI(ANONR(i))+nbinrnd(r0,p0)+1;
+        
+        if isnan(p0)
+            tR(ANONR(i))=tI(ANONR(i))+poissrnd(r0)+1;
+        else
+            tR(ANONR(i))=tI(ANONR(i))+nbinrnd(r0,p0)+1;
+        end
     end
 end
 for i=1:nAONR
     while isnan(tR(AONR(i))) || tR(AONR(i))>min(tD(AONR(i)),tmax)
-        tR(AONR(i))=tI(AONR(i))+nbinrnd(r0,p0)+1;
+        if isnan(p0)
+            tR(AONR(i))=tI(AONR(i))+poissrnd(r0)+1;
+        else
+            tR(AONR(i))=tI(AONR(i))+nbinrnd(r0,p0)+1;
+        end
     end
 end
 disp('216')
@@ -237,7 +243,11 @@ disp('232')
 for i=1:nRL
     j=RL(i);
     while isnan(tRLR(j)) || tRLR(j)>min(min(min(tEM(j),tP(j)),tD(j))-1,tmax)
-        tRLR(j)=tRL(j)+nbinrnd(r0,p0)+1;
+        if isnan(p0)
+            tRLR(j)=tRL(j)+poissrnd(r0)+1;
+        else
+            tRLR(j)=tRL(j)+nbinrnd(r0,p0)+1;
+        end
     end
 end
 disp('238')

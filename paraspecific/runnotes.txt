@@ -5,9 +5,14 @@ ran post processing to get csvs though needed to define para again in command wi
 
 6/19 incomplete paras 2,7,12,14,17,18. why? All hadn't even reached 1000 iteration printout when I checked on mon 10 may 11:08.
 Hoping re-running the command will fix it? Doesn't appear to have.
-
+Using para = 2 as the example here
 On VLStmMCMC2010FastLklhdMgrtn.m I tried to show all iter printouts at line 2082 but didnt reach here
-
+problem in for loop after p4=mle(...),around line 226
+RLNO = 1364 % KA relapse cases w/o relapse time
+nRLNO = 1
+Ah problem is that p4 is a NaN, probably because nRLO = 0.
+Also noticing that a lot of the nVARNAME variables could be 0 or 1 and cause a problem even though the code doesn't make allowances for them. This could even affect the 13 paras that worked. 
+Before getting sucked into this, and even though the 13 para results may be incorrect, let's just check if sims are closer to the actual on these 13 paras' betas. Since it'll take a while to run the code anyway to see.
 
 
 
