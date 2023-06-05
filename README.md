@@ -28,7 +28,7 @@ This repository contains MCMC code and simulation code for estimating the parame
 
 ## Data
 
-The MCMC code and simulation code require datasets ('data_final.mat' and 'data_final2.mat') that cannot be made publicly available as they contain personally identifiable information. If you would like to obtain a copy of the data please contact <lloyd.chapman@ucsf.edu> in the first instance. Simulated data and code for testing the MCMC algorithm on it will be added to this repository in due course.
+The MCMC code and simulation code require datasets ('data_final.mat' and 'data_final2.mat') that cannot be made publicly available as they contain personally identifiable information. If you would like to obtain a copy of the data please contact <l.chapman4@lancaster.ac.uk> in the first instance. Simulated data and code for testing the MCMC algorithm on it will be added to this repository in due course.
 
 ## Installing
 
@@ -82,7 +82,7 @@ julia> include("PlotSims.jl")
 
 ## Authors
 
-* Lloyd Chapman: <lloyd.chapman@ucsf.edu>
+* Lloyd Chapman: <l.chapman4@lancaster.ac.uk>
 
 ## License
 
@@ -90,7 +90,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ## Acknowledgments
 
-* The techniques used to accelerate the adaptation and convergence of the MCMC algorithm are due to Simon Spencer. Further details can be found in the  supporting information for the paper and have been submitted for publication in a separate paper [2].
+* The techniques used to accelerate the adaptation and convergence of the MCMC algorithm are due to Simon Spencer. Further details can be found in the supporting information for the paper and have been submitted for publication in a separate paper [2].
 * The code for plotting the shaded arrows in the transmission trees uses the MATLAB functions "quiver_thick.m" and "arrow_thick.m" from [Open Earth Tools](https://svn.oss.deltares.nl/repos/openearthtools/trunk/matlab/general/plot_fun/).
 
 ## References
